@@ -1,0 +1,27 @@
+name: content-scriptwriter
+role: Scriptwriter
+department: Content
+
+provider: anthropic
+model: claude-sonnet-4
+model_config:
+  temperature: 0.7
+  max_tokens: 2000
+
+budget:
+  tokens_per_month: 200000
+  max_cost_per_run: 3.00
+
+skills:
+  - short-form-scriptwriting
+
+tools: []
+
+constraints:
+  max_turns: 6
+  max_depth: 2
+  timeout_seconds: 180
+
+success_criteria:
+  - script is under 30 seconds when read aloud
+  - matches the research brief's key points

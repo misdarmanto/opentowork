@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.open-work/
+credentials.env
+.env
+*.log
+.DS_Store

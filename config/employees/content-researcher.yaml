@@ -1,0 +1,29 @@
+name: content-researcher
+role: Researcher
+department: Content
+
+provider: anthropic
+model: claude-sonnet-4
+model_config:
+  temperature: 0.5
+  max_tokens: 2000
+
+budget:
+  tokens_per_month: 200000
+  max_cost_per_run: 5.00
+
+skills:
+  - web-research
+  - source-verification
+
+tools: []
+
+constraints:
+  max_turns: 10
+  max_depth: 3
+  timeout_seconds: 300
+
+success_criteria:
+  - output contains minimum 5 sources
+  - each claim has a URL
+  - no hallucinated citations
