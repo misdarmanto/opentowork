@@ -1,0 +1,33 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/protect-generated.js"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm --filter * build)",
+      "Bash(pnpm --filter * dev)",
+      "Bash(pnpm --filter * test)",
+      "Bash(pnpm build)",
+      "Bash(pnpm test)",
+      "Bash(pnpm lint)",
+      "Bash(npx tsx *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(ls *)",
+      "Bash(cat *)"
+    ]
+  }
+}

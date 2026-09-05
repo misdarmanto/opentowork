@@ -126,6 +126,7 @@ export class WorkflowExecutor {
 
       totalInput += response.usage.inputTokens;
       totalOutput += response.usage.outputTokens;
+      turn++;
 
       if (response.stopReason === "end_turn") {
         const artifact = response.content

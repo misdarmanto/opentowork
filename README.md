@@ -8,6 +8,8 @@ and MVP scope — read that before making structural changes.
 
 ## Quick start
 
+Requires Node 22+ (see `.nvmrc`; run `nvm use` if you use nvm).
+
 ```bash
 pnpm install
 cp .env.example credentials.env   # fill in ANTHROPIC_API_KEY at minimum
