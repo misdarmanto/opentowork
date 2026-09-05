@@ -146,12 +146,19 @@ some other `on_complete` action) actually lands.
      `CREATE TABLE` is compared column-by-column against `schema.ts` so a
      future schema change without a matching DDL update fails a test
      instead of failing silently at runtime (`schema-drift.test.ts`)
-   - [ ] Provider: cost calculation, stop-reason mapping (mock the SDK client)
-     — not written yet, only exercised indirectly through executor tests'
-     fake `ProviderFactory`
+   - [x] Provider: cost calculation, stop-reason mapping, request forwarding
+     — `providers/anthropic.test.ts` mocks the SDK client's `messages.create`
+     directly (not the fake `ProviderFactory` executor tests use), covering
+     all three `mapStopReason` branches including the `null`/unrecognized
+     case, usage pass-through, `calculateCost`/`getModelInfo` for both known
+     and unrecognized models (asserting `0`, not a guessed price), and that
+     model config + tool schemas are actually forwarded to the SDK call
 2. [x] GitHub Actions CI (`.github/workflows/ci.yml`): install → build → lint
    → test on every push/PR — verified `pnpm install --frozen-lockfile` matches
-   the committed lockfile; not yet verified green on an actual GitHub run
+   the committed lockfile, and verified `pnpm test` behaves correctly under
+   `CI=true` specifically (the DuckDuckGo integration test skips, everything
+   else runs). **Not yet verified green on an actual GitHub Actions run** —
+   the `develop` branch with all of this work is not yet pushed to `origin`.
 3. [x] `pnpm lint` actually configured (ESLint flat config, `typescript-eslint`)
    — found and fixed one real bug in the process: `turn` in the executor's
    agentic loop was never incremented (`packages/core/src/executor/index.ts`)
