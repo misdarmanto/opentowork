@@ -18,7 +18,11 @@ skills:
   - web-research
   - source-verification
 
-tools: []
+tools:
+  - type: mcp
+    name: duckduckgo
+    command: npx
+    args: ["-y", "duckduckgo-mcp-server"]
 
 constraints:
   max_turns: 10

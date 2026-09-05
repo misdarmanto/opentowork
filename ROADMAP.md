@@ -88,16 +88,47 @@ literal `ANTHROPIC_API_KEY` run (same code path, just not that specific key).
 
 ## Phase 2 — The three MVP integrations
 
-Per `CLAUDE.md`, exactly three, hardcoded, no builder:
+Per `CLAUDE.md`, exactly three, hardcoded, no builder.
 
-1. **Brave (or Google) Search** via MCP — attach to `content-researcher`
-2. **Google Drive** via MCP — used in `on_complete: save_to_drive`
-3. **Gmail** via MCP — used in `on_complete: notify` and approval
-   notifications
+1. [x] **Search** via MCP — attach to `content-researcher`. Shipped as
+   `duckduckgo-mcp-server` (npm, real published package, `@modelcontextprotocol/sdk`
+   under the hood) instead of Brave Search — decided with the user because
+   Brave's API now requires a paid plan (min. $5) even for the "free" tier,
+   and DuckDuckGo's HTML-scraping approach needs zero signup/API key.
+   Trade-off accepted deliberately: DuckDuckGo anomaly-blocks scraping from
+   many IPs (confirmed in this dev sandbox — every search call failed with
+   "DDG detected an anomaly"/rate-limit, likely because it's a shared
+   datacenter IP) and can be flaky even on residential connections. This was
+   run for real against `research-and-script-deepseek.yaml`: the agent
+   correctly *called* `duckduckgo_web_search` (proving tool selection and
+   the MCP wiring work), got real failures back as `tool_result` errors,
+   retried a few times, then **transparently told the user in the output**
+   that search was unavailable and the brief was written from its own
+   knowledge instead — rather than fabricating fake sources. That failure
+   handling is itself a good property, not a workaround. `tools/integrations.test.ts`
+   verifies the real package still connects and exposes the expected
+   tool/schema (not search *results* — asserting on those would make the
+   test flaky for reasons outside our code). If DuckDuckGo's unreliability
+   becomes a real problem later, revisit Brave (paid) or a Google Custom
+   Search JSON API key (free tier, more setup) — swapping is a one-line
+   change in the employee YAML's `tools:` entry.
+2. [ ] **Google Drive** via MCP — **explicitly deferred**, not started. Needs
+   OAuth setup (Google Cloud project, consent screen, refresh token) that
+   only the user can do in a browser; revisit when there's a concrete need
+   for `on_complete: save_to_drive` to actually run.
+3. [ ] **Gmail** via MCP — **explicitly deferred**, same OAuth reason as
+   Drive. Also: no clearly-official, actively-maintained Gmail MCP server
+   was confirmed to exist at time of writing — needs a fresh check before
+   picking one, the way `duckduckgo-mcp-server` was verified before use.
 
-**Done when:** the `research-and-script` workflow's `on_complete` block in
+**Done when:** ~~the `research-and-script` workflow's `on_complete` block in
 the workflow YAML reference actually executes (saves to Drive, emails the
-approver a link) instead of being unread config.
+approver a link) instead of being unread config.~~ Narrowed by user decision:
+search integration is done and real; Drive/Gmail and the `on_complete` block
+that would use them are out of scope until OAuth setup happens. The
+`on_complete` block in the workflow schema is still just parsed, never
+executed by the executor — that's still open work whenever Drive/Gmail (or
+some other `on_complete` action) actually lands.
 
 ---
 

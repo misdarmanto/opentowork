@@ -16,7 +16,16 @@ skills:
   - web-research
   - source-verification
 
-tools: []
+tools:
+  # Free, no API key — scrapes DuckDuckGo's HTML search. Verified to connect
+  # and expose duckduckgo_web_search correctly via the MCP protocol; actual
+  # search results are unverified in CI/sandboxed environments because DDG
+  # anomaly-blocks datacenter IPs (see ROADMAP.md Phase 2). Works from most
+  # residential/personal-machine IPs.
+  - type: mcp
+    name: duckduckgo
+    command: npx
+    args: ["-y", "duckduckgo-mcp-server"]
 
 constraints:
   max_turns: 10
