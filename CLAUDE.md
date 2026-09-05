@@ -54,6 +54,8 @@ SSO/complex auth, LangChain/LangGraph.
 
 ## Working conventions
 
+- **No `Co-Authored-By: Claude` (or any AI attribution) trailer in commit
+  messages.** Commits are authored as `misdarmanto` only — no exceptions.
 - **Commit after every small, coherent change** — one sub-feature, one bug
   fix, one topic per commit. Don't batch multiple unrelated changes into one
   commit, and don't wait until a whole roadmap phase is done to commit. This
