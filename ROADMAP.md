@@ -157,8 +157,10 @@ some other `on_complete` action) actually lands.
    → test on every push/PR — verified `pnpm install --frozen-lockfile` matches
    the committed lockfile, and verified `pnpm test` behaves correctly under
    `CI=true` specifically (the DuckDuckGo integration test skips, everything
-   else runs). **Not yet verified green on an actual GitHub Actions run** —
-   the `develop` branch with all of this work is not yet pushed to `origin`.
+   else runs). Pushed `develop` to `origin` (`8a32a51`) to trigger a real
+   run — repo is private and no `gh` CLI/token is available in this
+   environment to check the result programmatically, so this needs a human
+   to confirm green at https://github.com/misdarmanto/openwork/actions.
 3. [x] `pnpm lint` actually configured (ESLint flat config, `typescript-eslint`)
    — found and fixed one real bug in the process: `turn` in the executor's
    agentic loop was never incremented (`packages/core/src/executor/index.ts`)

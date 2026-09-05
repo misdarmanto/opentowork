@@ -1,5 +1,7 @@
 # Open Work
 
+[![CI](https://github.com/misdarmanto/openwork/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/misdarmanto/openwork/actions/workflows/ci.yml)
+
 Build and run teams of AI agents. Open source, self-hosted, define once in
 YAML, run forever.
 
