@@ -54,6 +54,10 @@ SSO/complex auth, LangChain/LangGraph.
 
 ## Working conventions
 
+- **Commit after every small, coherent change** — one sub-feature, one bug
+  fix, one topic per commit. Don't batch multiple unrelated changes into one
+  commit, and don't wait until a whole roadmap phase is done to commit. This
+  is the default going forward; no need to ask each time.
 - Progress lives in `ROADMAP.md` — check items off as they land; don't just
   report done in chat and let the file rot.
 - Run `/check` before calling any roadmap item done, then use the
