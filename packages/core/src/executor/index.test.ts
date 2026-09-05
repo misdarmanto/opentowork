@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import type { Employee } from "../schema/employee.js";
-import type { Workflow } from "../schema/workflow.js";
+import { isHumanStep, type Workflow } from "../schema/workflow.js";
 import type { ProviderFactory } from "../providers/factory.js";
 import { RunStore } from "../store/index.js";
 import { WorkflowExecutor } from "./index.js";
@@ -204,5 +205,261 @@ describe("WorkflowExecutor", () => {
     expect(runs).toHaveLength(1);
     expect(runs[0].status).toBe("failed");
     expect(runs[0].errorMessage).toMatch(/Unhandled stop reason "max_tokens"/);
+  });
+
+  it("executes a tool_use round trip against a real custom tool before finishing", async () => {
+    const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "tools", "__fixtures__");
+
+    const workflow: Workflow = {
+      name: "with-tool",
+      trigger: "manual",
+      steps: [
+        {
+          name: "research",
+          employee: "content-researcher",
+          handoff: { objective: "Echo something", constraints: [] },
+        },
+      ],
+    };
+
+    let call = 0;
+    const toolCallingProvider = {
+      call: async () => {
+        call++;
+        if (call === 1) {
+          // First turn: the model decides to call the "echo" tool.
+          return {
+            id: "fake-1",
+            content: [{ type: "tool_use" as const, id: "tool-1", name: "echo", input: { text: "hi" } }],
+            stopReason: "tool_use" as const,
+            usage: { inputTokens: 5, outputTokens: 5 },
+          };
+        }
+        // Second turn: the model has the tool_result and finishes.
+        return {
+          id: "fake-2",
+          content: [{ type: "text" as const, text: "done" }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 5, outputTokens: 5 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(
+      toolCallingProvider,
+      store,
+      async () =>
+        fakeEmployee({
+          tools: [{ type: "custom", name: "echo", path: "echo-custom-tool.mjs" }],
+        }),
+      { log: () => {} },
+      fixturesDir,
+    );
+
+    const state = await executor.run(workflow);
+
+    expect(call).toBe(2); // proves the loop actually went through a tool round trip, not just one call
+    expect(state.status).toBe("completed");
+    expect(state.stepOutputs.get("research")).toBe("done");
+  });
+});
+
+describe("WorkflowExecutor.approve / reject / resume", () => {
+  let dbPath: string;
+  let store: RunStore;
+
+  const workflowWithReview: Workflow = {
+    name: "with-review",
+    trigger: "manual",
+    steps: [
+      {
+        name: "write-script",
+        employee: "content-scriptwriter",
+        handoff: { objective: "Write a script", constraints: [] },
+      },
+      {
+        name: "review",
+        assignee: "human",
+        action: "approve_or_reject",
+        depends_on: "write-script",
+        on_reject: { resubmit_to: "write-script", max_attempts: 2 },
+      },
+      {
+        name: "notify",
+        employee: "content-scriptwriter",
+        depends_on: "review",
+        handoff: { objective: "Say the script was sent", constraints: [] },
+      },
+    ],
+  };
+
+  beforeEach(() => {
+    dbPath = path.join(os.tmpdir(), `open-work-approval-test-${Date.now()}-${Math.random()}.sqlite`);
+    store = new RunStore(dbPath);
+  });
+
+  afterEach(() => {
+    for (const suffix of ["", "-wal", "-shm"]) {
+      if (fs.existsSync(dbPath + suffix)) fs.rmSync(dbPath + suffix);
+    }
+  });
+
+  it("stops at the human step, then approve() continues to the following step", async () => {
+    let scriptCalls = 0;
+    const providers = {
+      call: async () => {
+        scriptCalls++;
+        return {
+          id: "fake",
+          content: [{ type: "text" as const, text: `draft ${scriptCalls}` }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 1, outputTokens: 1 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(providers, store, async () => fakeEmployee(), { log: () => {} });
+
+    const afterRun = await executor.run(workflowWithReview);
+    expect(afterRun.status).toBe("awaiting_approval");
+    expect(scriptCalls).toBe(1); // only write-script ran; notify has not
+
+    const afterApprove = await executor.approve(afterRun.runId, workflowWithReview);
+    expect(afterApprove.status).toBe("completed");
+    expect(scriptCalls).toBe(2); // notify (also content-scriptwriter) ran too
+    expect(store.getRun(afterRun.runId)?.status).toBe("completed");
+  });
+
+  it("reject() with attempts remaining re-executes resubmit_to, then awaits approval again", async () => {
+    let scriptCalls = 0;
+    const providers = {
+      call: async () => {
+        scriptCalls++;
+        return {
+          id: "fake",
+          content: [{ type: "text" as const, text: `draft ${scriptCalls}` }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 1, outputTokens: 1 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(providers, store, async () => fakeEmployee(), { log: () => {} });
+
+    const afterRun = await executor.run(workflowWithReview);
+    expect(store.getLatestStepsByName(afterRun.runId).get("write-script")?.output).toBe("draft 1");
+
+    const afterReject = await executor.reject(afterRun.runId, workflowWithReview);
+    // Rejected with 1 attempt used, max_attempts is 2 -> resubmits to
+    // write-script, which re-runs (proving it isn't just replayed from
+    // the old stored output) and lands back on awaiting_approval.
+    expect(scriptCalls).toBe(2);
+    expect(afterReject.status).toBe("awaiting_approval");
+    expect(afterReject.stepOutputs.get("write-script")).toBe("draft 2");
+    expect(store.getLatestStepsByName(afterRun.runId).get("write-script")?.output).toBe("draft 2");
+
+    const afterApprove = await executor.approve(afterRun.runId, workflowWithReview);
+    expect(afterApprove.status).toBe("completed");
+    expect(scriptCalls).toBe(3);
+  });
+
+  it("marks the rejected step 'superseded' durably before re-running it, so a crash mid-retry can't leave the old (rejected) output looking done", async () => {
+    let scriptCalls = 0;
+    const crashesOnRetry = {
+      call: async () => {
+        scriptCalls++;
+        if (scriptCalls === 2) {
+          // Simulates the process dying partway through the resubmitted
+          // step's execution — after reject() has already committed the
+          // decision and the supersede, before write-script's re-run ever
+          // records a new "completed" row.
+          throw new Error("simulated crash mid-retry");
+        }
+        return {
+          id: "fake",
+          content: [{ type: "text" as const, text: `draft ${scriptCalls}` }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 1, outputTokens: 1 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(crashesOnRetry, store, async () => fakeEmployee(), { log: () => {} });
+
+    const afterRun = await executor.run(workflowWithReview);
+    expect(store.getLatestStepsByName(afterRun.runId).get("write-script")?.status).toBe("completed");
+
+    await expect(executor.reject(afterRun.runId, workflowWithReview)).rejects.toThrow("simulated crash mid-retry");
+
+    // The critical property: the OLD write-script row must not still read
+    // as "completed" after the crash. If it did, a later resume() would
+    // treat the rejected draft as done and skip re-running it entirely.
+    const writeScriptRow = store.getLatestStepsByName(afterRun.runId).get("write-script");
+    expect(writeScriptRow?.status).toBe("superseded");
+    expect(writeScriptRow?.output).toBe("draft 1"); // the rejected draft, now clearly marked stale
+  });
+
+  it("reject() fails the run once max_attempts is exceeded", async () => {
+    const workflowNoRetries: Workflow = {
+      ...workflowWithReview,
+      steps: workflowWithReview.steps.map((s) =>
+        s.name === "review" && isHumanStep(s) ? { ...s, on_reject: { resubmit_to: "write-script", max_attempts: 0 } } : s,
+      ),
+    };
+
+    const providers = {
+      call: async () => ({
+        id: "fake",
+        content: [{ type: "text" as const, text: "draft" }],
+        stopReason: "end_turn" as const,
+        usage: { inputTokens: 1, outputTokens: 1 },
+      }),
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(providers, store, async () => fakeEmployee(), { log: () => {} });
+
+    const afterRun = await executor.run(workflowNoRetries);
+    const afterReject = await executor.reject(afterRun.runId, workflowNoRetries);
+
+    expect(afterReject.status).toBe("failed");
+    expect(store.getRun(afterRun.runId)?.status).toBe("failed");
+    expect(store.getRun(afterRun.runId)?.errorMessage).toMatch(/rejected and max attempts exceeded/);
+  });
+
+  it("resume() on a run still awaiting a decision reports awaiting_approval without duplicating the approval", async () => {
+    const providers = fakeProviders("draft");
+    const executor = new WorkflowExecutor(providers, store, async () => fakeEmployee(), { log: () => {} });
+
+    const afterRun = await executor.run(workflowWithReview);
+    expect(store.listPendingApprovals()).toHaveLength(1);
+
+    // Simulate restarting the CLI process: a fresh resume() call with no
+    // in-memory state, before any approve/reject decision was made.
+    const resumed = await executor.resume(afterRun.runId, workflowWithReview);
+
+    expect(resumed.status).toBe("awaiting_approval");
+    expect(store.listPendingApprovals()).toHaveLength(1); // not duplicated
+  });
+
+  it("resume() on an already-completed run is a no-op that returns the completed state", async () => {
+    const providers = fakeProviders("draft");
+    const executor = new WorkflowExecutor(providers, store, async () => fakeEmployee(), { log: () => {} });
+
+    const singleStepWorkflow: Workflow = {
+      name: "single",
+      trigger: "manual",
+      steps: [{ name: "only", employee: "x", handoff: { objective: "go", constraints: [] } }],
+    };
+
+    const afterRun = await executor.run(singleStepWorkflow);
+    expect(afterRun.status).toBe("completed");
+
+    const resumed = await executor.resume(afterRun.runId, singleStepWorkflow);
+    expect(resumed.status).toBe("completed");
   });
 });

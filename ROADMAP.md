@@ -21,8 +21,8 @@ Each phase ends with a checkable "done when" so progress isn't vibes-based.
 - [x] Example employees + workflow (`research-and-script`)
 
 **Done when:** `open-work validate` and a linear `open-work run` (employees
-with no tools) complete against a real Anthropic API key. **Not yet verified
-— first task of Phase 1.**
+with no tools) complete against a real Anthropic API key. **Still not
+verified against a real API key** — see Phase 1, item 1.
 
 ---
 
@@ -31,33 +31,51 @@ with no tools) complete against a real Anthropic API key. **Not yet verified
 This is the highest-priority phase. Right now the README/CLAUDE.md claim
 things the code doesn't do yet. Nothing else matters until these are real.
 
-1. **Verify one real end-to-end run** with `ANTHROPIC_API_KEY` set — confirm
-   `research → write-script → review(human)` actually produces artifacts.
-2. **Tool-calling loop in the executor** (`packages/core/src/executor/index.ts`
-   currently throws on `stop_reason: tool_use`):
-   - Load MCP tools at step start (`@modelcontextprotocol/sdk` client per
-     `tools: [{type: mcp, ...}]` entry)
-   - Load custom tools via dynamic `import()` of the path in
-     `tools: [{type: custom, path: ...}]`, validated against a Zod schema
-   - Wire both into the agentic loop: dispatch `tool_use` blocks, feed
-     `tool_result` back, respect `max_turns`
-3. **`trace.jsonl` file output per run** (`.open-work/runs/<uuid>/trace.jsonl`)
-   — the `Tracer` interface exists but only logs to stdout; make it also
-   append structured JSON lines per the format in `CLAUDE.md`, plus write
-   `state.json` and `artifacts/` per step.
-4. **Implement `open-work resume <runId>`** for real: read the run's last
-   completed step from `RunStore`, re-hydrate `stepOutputs` from the `steps`
-   table, continue from the first incomplete step instead of restarting.
-5. **Approval queue as an actual gate, not a dead end**: `open-work approve
-   <runId>` / `open-work reject <runId> [--reason]` that mutate the
-   `approvals` table and either mark the run `completed` or resubmit to the
-   step named in `on_reject.resubmit_to` (respecting `max_attempts`).
+1. [ ] **Verify one real end-to-end run** with `ANTHROPIC_API_KEY` set —
+   confirm `research → write-script → review(human)` actually produces
+   artifacts. **Still not done** — no API key available in the dev
+   environment this was built in. Everything below was verified without one
+   (fake providers in unit/integration tests, plus a real no-LLM
+   `config/workflows/human-only-smoke-test.yaml` run through the actual CLI)
+   — a real Anthropic call is the one remaining unverified path.
+2. [x] **Tool-calling loop in the executor** — MCP (real stdio subprocess,
+   see `packages/core/src/tools/mcp.test.ts` against a real test MCP server)
+   and custom tools (real dynamic import + timeout, see `tools/custom.test.ts`)
+   both load through `loadToolsForEmployee` and are dispatched in
+   `WorkflowExecutor`'s agentic loop (`tool_use` → execute → `tool_result` →
+   continue), verified with a real custom-tool round trip in
+   `executor/index.test.ts`. Found and fixed a real bug along the way: the
+   `turn` counter was never incremented (caught by ESLint's `prefer-const`).
+3. [x] **`trace.jsonl` / `state.json` / `artifacts/` on disk** —
+   `packages/core/src/executor/tracer.ts` (`createFileTracer`,
+   `writeStateSnapshot`, `writeArtifacts`), wired into the CLI's `run`/
+   `resume`/`approve`/`reject` commands. Verified against the real
+   filesystem, not just mocked (`tracer.test.ts`, and manually via the CLI —
+   see below).
+4. [x] **`open-work resume <runId>`** — rebuilds `ExecutionState` entirely
+   from `RunStore` (SQLite is the durable checkpoint), resumes at the first
+   step that isn't done. Verified: resuming a still-pending run doesn't
+   duplicate its approval; resuming a completed run is a no-op.
+5. [x] **Approval queue as a real gate** — `open-work approve <runId>` /
+   `open-work reject <runId>`, plus `open-work approvals` to list pending
+   ones. Reject with attempts remaining jumps back to `on_reject.resubmit_to`
+   and actually re-executes it (not a replay of the old output); exceeding
+   `max_attempts` fails the run. Verified twice: once with fake providers in
+   `executor/index.test.ts`, once for real through the CLI end-to-end
+   (`run` → `approvals` → `reject` → re-`awaiting_approval` → `reject` again
+   → `failed` → `resume` on a failed run is a no-op) using
+   `human-only-smoke-test.yaml`, which needs no LLM call at all.
 
-**Done when:** you can run a workflow with a real search tool attached, kill
-the process mid-run, `resume` it and watch it continue (not restart), get
-prompted for approval, reject once, see it retry the write-script step, then
-approve and see the run marked `completed` — all with `trace.jsonl` and
-`artifacts/` populated on disk.
+**Done when:** ~~you can run a workflow with a real search tool attached,
+kill the process mid-run, `resume` it and watch it continue (not restart),
+get prompted for approval, reject once, see it retry the write-script step,
+then approve and see the run marked `completed` — all with `trace.jsonl` and
+`artifacts/` populated on disk.~~ All of this is done and verified **except**
+the "real search tool" and "real Anthropic call" parts, which need an API
+key this environment doesn't have. Everything else in that sentence has been
+run for real, not just written. Whoever has an API key next: run
+`open-work run research-and-script -p topic="..."` and cross this phase off
+for good.
 
 ---
 
@@ -81,8 +99,8 @@ approver a link) instead of being unread config.
 1. Vitest unit tests:
    - [x] Schema: valid/invalid employee & workflow YAML (Zod error paths)
    - [x] Executor: step sequencing, `depends_on` resolution, human-step gating
-   - [ ] Executor: reject → resubmit → max-attempts-exceeded path — blocked on
-     Phase 1 (reject/resubmit isn't implemented in the executor yet)
+   - [x] Executor: reject → resubmit → max-attempts-exceeded path — landed in
+     Phase 1 (`executor/index.test.ts`'s `.approve / reject / resume` block)
    - [x] `RunStore`: create/update run, record step (with read-back
      assertions, not just "doesn't throw"), approval lifecycle (both
      approved and rejected paths), org_id isolation
