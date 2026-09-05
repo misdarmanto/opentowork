@@ -1,0 +1,28 @@
+name: research-and-script-deepseek
+description: Same flow as research-and-script.yaml, using the DeepSeek-backed employees.
+trigger: manual
+
+steps:
+  - name: research
+    employee: content-researcher-deepseek
+    handoff:
+      objective: "Research trends in {{topic}}"
+      constraints:
+        - "max 200 words summary"
+      deliverable: research-brief.md
+
+  - name: write-script
+    employee: content-scriptwriter-deepseek
+    depends_on: research
+    handoff:
+      objective: "Write a 30-second script based on the research"
+      context: "Research summary: {{steps.research.output}}"
+      deliverable: script.md
+
+  - name: review
+    assignee: human
+    depends_on: write-script
+    action: approve_or_reject
+    on_reject:
+      resubmit_to: write-script
+      max_attempts: 2

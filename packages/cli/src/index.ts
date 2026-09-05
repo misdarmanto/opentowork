@@ -47,6 +47,14 @@ function buildProviderFactory(): ProviderFactory {
   if (process.env.ANTHROPIC_API_KEY) {
     factory.register("anthropic", new AnthropicProvider(), { apiKey: process.env.ANTHROPIC_API_KEY });
   }
+  if (process.env.DEEPSEEK_API_KEY) {
+    // DeepSeek's API is Anthropic-compatible (https://api-docs.deepseek.com/guides/anthropic_api),
+    // so the same provider class works — only the base URL and key differ.
+    factory.register("deepseek", new AnthropicProvider(), {
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseUrl: "https://api.deepseek.com/anthropic",
+    });
+  }
   return factory;
 }
 

@@ -22,7 +22,7 @@ export class AnthropicProvider implements LLMProvider {
   private client!: Anthropic;
 
   async initialize(config: ProviderConfig): Promise<void> {
-    this.client = new Anthropic({ apiKey: config.apiKey, timeout: config.timeout });
+    this.client = new Anthropic({ apiKey: config.apiKey, timeout: config.timeout, baseURL: config.baseUrl });
   }
 
   async call(messages: MessageParam[], modelConfig: ModelConfig, tools?: ToolSchema[]): Promise<LLMResponse> {

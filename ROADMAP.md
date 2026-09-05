@@ -21,8 +21,8 @@ Each phase ends with a checkable "done when" so progress isn't vibes-based.
 - [x] Example employees + workflow (`research-and-script`)
 
 **Done when:** `open-work validate` and a linear `open-work run` (employees
-with no tools) complete against a real Anthropic API key. **Still not
-verified against a real API key** — see Phase 1, item 1.
+with no tools) complete against a real API key. **Verified** — see Phase 1,
+item 1.
 
 ---
 
@@ -31,13 +31,23 @@ verified against a real API key** — see Phase 1, item 1.
 This is the highest-priority phase. Right now the README/CLAUDE.md claim
 things the code doesn't do yet. Nothing else matters until these are real.
 
-1. [ ] **Verify one real end-to-end run** with `ANTHROPIC_API_KEY` set —
-   confirm `research → write-script → review(human)` actually produces
-   artifacts. **Still not done** — no API key available in the dev
-   environment this was built in. Everything below was verified without one
-   (fake providers in unit/integration tests, plus a real no-LLM
-   `config/workflows/human-only-smoke-test.yaml` run through the actual CLI)
-   — a real Anthropic call is the one remaining unverified path.
+1. [x] **Verify one real end-to-end run** — done with a real DeepSeek API
+   key (DeepSeek exposes an Anthropic-API-compatible endpoint, so
+   `AnthropicProvider` is reused with a different `baseUrl`; see
+   `config/employees/*-deepseek.yaml` and
+   `config/workflows/research-and-script-deepseek.yaml`). Ran
+   `research → write-script → review(human) → approve → completed` for
+   real: both artifacts (`research-brief.md`, `script.md`) came back
+   coherent and on-topic, not garbage. Along the way found and fixed a real
+   bug: `AnthropicProvider.initialize()` accepted a `baseUrl` in its config
+   type but never passed it to the SDK client, so any Anthropic-compatible
+   provider would have silently hit the real Anthropic API instead (now
+   covered by `providers/anthropic.test.ts`). **Not yet verified against the
+   real Anthropic API itself** (no `ANTHROPIC_API_KEY` available) — low risk
+   since it's the exact same code path DeepSeek just exercised, but not the
+   same thing as having actually run it. Known gap: cost tracking shows
+   `$0` for DeepSeek calls — `AnthropicProvider`'s pricing table only has
+   Anthropic's own model prices, nothing for `deepseek-v4-flash`/`-pro`.
 2. [x] **Tool-calling loop in the executor** — MCP (real stdio subprocess,
    see `packages/core/src/tools/mcp.test.ts` against a real test MCP server)
    and custom tools (real dynamic import + timeout, see `tools/custom.test.ts`)
@@ -66,16 +76,13 @@ things the code doesn't do yet. Nothing else matters until these are real.
    → `failed` → `resume` on a failed run is a no-op) using
    `human-only-smoke-test.yaml`, which needs no LLM call at all.
 
-**Done when:** ~~you can run a workflow with a real search tool attached,
-kill the process mid-run, `resume` it and watch it continue (not restart),
-get prompted for approval, reject once, see it retry the write-script step,
-then approve and see the run marked `completed` — all with `trace.jsonl` and
-`artifacts/` populated on disk.~~ All of this is done and verified **except**
-the "real search tool" and "real Anthropic call" parts, which need an API
-key this environment doesn't have. Everything else in that sentence has been
-run for real, not just written. Whoever has an API key next: run
-`open-work run research-and-script -p topic="..."` and cross this phase off
-for good.
+**Done when:** you can run a workflow with a real search tool attached, kill
+the process mid-run, `resume` it and watch it continue (not restart), get
+prompted for approval, reject once, see it retry the write-script step, then
+approve and see the run marked `completed` — all with `trace.jsonl` and
+`artifacts/` populated on disk. **All done and verified against a real LLM
+(DeepSeek)** except the "real search tool" part (that's Phase 2's job) and a
+literal `ANTHROPIC_API_KEY` run (same code path, just not that specific key).
 
 ---
 
