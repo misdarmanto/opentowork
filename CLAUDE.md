@@ -56,6 +56,16 @@ SSO/complex auth, LangChain/LangGraph.
 
 - **No `Co-Authored-By: Claude` (or any AI attribution) trailer in commit
   messages.** Commits are authored as `misdarmanto` only — no exceptions.
+- **Commit subjects follow Conventional Commits**: `type(scope): summary`,
+  imperative mood, lowercase summary, no trailing period. `scope` is
+  optional — use `core`, `cli`, or `web` when a change is confined to one
+  package, omit it for repo-wide changes (docs, CI, tooling). Types in use:
+  `feat` (new capability), `fix` (bug fix), `docs` (README/CLAUDE.md/docs/
+  comments only, no code), `test` (test-only changes), `chore` (tooling,
+  config, dependencies, LICENSE — no src change), `refactor` (no behavior
+  change), `ci` (workflow files). Keep the detailed "what and why" in the
+  body, same as before — the type prefix classifies the commit, it doesn't
+  replace the explanation.
 - **Commit after every small, coherent change** — one sub-feature, one bug
   fix, one topic per commit. Don't batch multiple unrelated changes into one
   commit, and don't wait until a whole roadmap phase is done to commit. This
