@@ -5,3 +5,5 @@ export * from "./providers/factory.js";
 export * from "./providers/anthropic.js";
 export * from "./store/index.js";
 export * from "./executor/index.js";
+export * from "./executor/tracer.js";
+export * from "./tools/registry.js";

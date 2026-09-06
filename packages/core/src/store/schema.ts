@@ -14,6 +14,9 @@ export const runs = sqliteTable("runs", {
   completedAt: integer("completed_at", { mode: "timestamp" }),
   totalCost: real("total_cost").default(0),
   errorMessage: text("error_message"),
+  // JSON-encoded trigger params (e.g. {"topic": "..."}), needed to
+  // reconstruct not-yet-executed steps' handoff templates on resume.
+  params: text("params"),
 });
 
 export const steps = sqliteTable("steps", {
@@ -26,6 +29,12 @@ export const steps = sqliteTable("steps", {
   outputTokens: integer("output_tokens").default(0),
   cost: real("cost").default(0),
   output: text("output"),
+  // Ordering for "latest recorded step per stepName" on resume — insertion
+  // order isn't a guarantee SQL makes without an explicit sortable column.
+  // Millisecond resolution (not "timestamp"'s seconds) because a resubmit
+  // retry can complete its LLM call within the same second as the row it
+  // supersedes.
+  recordedAt: integer("recorded_at", { mode: "timestamp_ms" }).notNull(),
 });
 
 export const approvals = sqliteTable("approvals", {

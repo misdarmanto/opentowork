@@ -1,0 +1,17 @@
+name: human-only-smoke-test
+description: >
+  No LLM calls — used to manually smoke-test the CLI's approve/reject/resume
+  plumbing (trace.jsonl, state.json, exit codes, JSON event logging) without
+  an API key. Deliberately degenerate (resubmit_to points at itself, since
+  there's no agent step to resubmit to): it only proves the CLI wiring, not
+  the real resubmit-a-different-step path. That path is covered for real by
+  packages/core/src/executor/index.test.ts's ".approve / reject / resume"
+  block, which uses a genuine two-step write-script/review chain.
+trigger: manual
+steps:
+  - name: review
+    assignee: human
+    action: approve_or_reject
+    on_reject:
+      resubmit_to: review
+      max_attempts: 1

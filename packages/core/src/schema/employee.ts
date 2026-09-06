@@ -4,6 +4,10 @@ const toolConfigSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("mcp"),
     name: z.string(),
+    // stdio transport (most real MCP servers, e.g. `npx @modelcontextprotocol/server-brave-search`)
+    command: z.string().optional(),
+    args: z.array(z.string()).default([]),
+    // streamable-http transport, for servers exposed over HTTP instead
     endpoint: z.string().optional(),
     credentials_from: z.string().optional(),
   }),
