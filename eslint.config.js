@@ -1,10 +1,11 @@
 // @ts-check
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
+import globals from "globals";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/node_modules/**", ".open-work/**", ".claude/**"],
+    ignores: ["**/dist/**", "**/node_modules/**", "**/.next/**", ".open-work/**", ".claude/**"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -17,6 +18,15 @@ export default tseslint.config(
         "error",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
       ],
+    },
+  },
+  {
+    // packages/web runs in the browser (client components) and Node
+    // (route handlers) — give it both global sets rather than guessing
+    // which file is which.
+    files: ["packages/web/**/*.{ts,tsx}"],
+    languageOptions: {
+      globals: { ...globals.browser, ...globals.node },
     },
   },
 );

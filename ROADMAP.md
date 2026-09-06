@@ -170,25 +170,68 @@ core state transitions, not just schema parsing.
 
 ---
 
-## Phase 4 — Minimal web UI
+## Phase 4 — Minimal web UI (done)
 
 Per MVP scope: list/preview workflows, run dashboard (list runs, trace, cost),
 approval queue UI, form-based workflow builder that generates YAML (no
 drag-and-drop). Reads/writes the same `config/*.yaml` and the same SQLite DB
 as the CLI — never a second source of truth.
 
-1. Scaffold Next.js app in `packages/web`, importing `@open-work/core`
-   directly (same `RunStore`, same executor)
-2. `GET /api/workflows`, `GET /api/runs`, `GET /api/runs/:id` (trace + cost)
-3. Approval queue page: list pending, approve/reject buttons
-4. Form builder: pick employees per step, set objective/constraints →
-   generate + save YAML to `config/workflows/`
-5. Trigger a run from the UI, poll status with TanStack Query
+1. [x] Scaffolded Next.js 16 (App Router, Turbopack) in `packages/web`,
+   depending on `@open-work/core` directly — same `RunStore`, same
+   `WorkflowExecutor`, same file tracer as the CLI (`lib/server/executor.ts`
+   mirrors `packages/cli/src/index.ts`'s run/resume/approve/reject exactly).
+   Root-finding is done by walking up for `pnpm-workspace.yaml`
+   (`lib/server/project-root.ts`) rather than trusting `process.cwd()`,
+   since how `next dev`/`next start` gets invoked doesn't reliably fix that.
+2. [x] `GET /api/workflows` (+ `POST` for the builder), `GET /api/employees`,
+   `GET /api/runs` (+ `POST` to trigger), `GET /api/runs/[id]` (steps +
+   pending approval), `POST /api/runs/[id]/{approve,reject,resume}`,
+   `GET /api/approvals`
+3. [x] Dashboard (`/`) — pending approvals + recent runs, polling
+4. [x] Run detail page (`/runs/[id]`) — per-step output/cost, approve/reject
+   buttons, resume button
+5. [x] Form builder (`/workflows/new`) — pick employee + objective per step,
+   optional trailing human-approval step with max retries, generates the
+   exact same YAML shape a developer would hand-write and saves it to
+   `config/workflows/`
+6. [x] Trigger a run from `/workflows`, polling via TanStack Query
+
+Verified for real, not just built: ran the actual dev server, drove it
+through a real browser (not curl) — triggered `human-only-smoke-test`,
+watched it land on `awaiting_approval`, clicked Approve, watched it become
+`completed`; separately, filled out the builder form for a two-step
+DeepSeek workflow, saved it, and confirmed the resulting file on disk is
+byte-for-byte a valid `open-work validate`-passing workflow YAML.
+
+One real bug found and fixed along the way: `app/workflows/page.tsx` (a
+client component) imported `isHumanStep` from `@open-work/core`'s barrel
+export, which also re-exports the executor/store/tools modules (SQLite,
+child_process) — Turbopack tried to bundle those for the browser and failed.
+Fixed by duplicating the one-line type guard locally in that file rather
+than importing a runtime value from the barrel; documented as a case for a
+future client-safe subpath export if the duplication becomes annoying.
+
+A second, more serious bug was caught by `spec-reviewer`'s review of this
+phase before it was called done: workflow and employee names from the
+builder API (`POST /api/workflows`) were written straight into file paths
+with no validation — a name like `../../evil` could read or write outside
+`config/workflows/`, and saving over an existing workflow name silently
+clobbered a developer's hand-written, git-committed file with no warning.
+Fixed with a shared filename allowlist (`assertSafeFileName` in
+`lib/server/workflows.ts`, applied to workflow names, employee references,
+and save/load paths) and an explicit overwrite guard on `saveWorkflow`.
+Verified with real tests that actually attempt the traversal and the
+overwrite, not just unit tests around the happy path
+(`lib/server/workflows.test.ts`).
 
 **Done when:** a non-technical user can build a new workflow from existing
 employee templates, run it, and approve/reject the result without touching a
 YAML file — while a developer editing the same YAML by hand sees it reflected
-in the UI.
+in the UI. **Done**, with one caveat: triggering a run blocks the HTTP
+request until the workflow stops (fine for `next start` as a long-running
+process, not serverless-friendly) — acceptable for the MVP's self-host
+target, noted in `packages/web/README.md`.
 
 ---
 
