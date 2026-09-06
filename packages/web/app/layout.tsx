@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { NavLink } from "@/components/nav-link";
+import { Button } from "@/components/ui/button";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,18 +27,31 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col bg-muted/30">
         <Providers>
-          <header className="border-b border-black/10 dark:border-white/10">
-            <nav className="mx-auto max-w-4xl flex items-center gap-6 px-4 py-3 text-sm">
-              <Link href="/" className="font-semibold">
-                Open Work
-              </Link>
-              <Link href="/workflows">Workflows</Link>
-              <Link href="/workflows/new">New Workflow</Link>
+          <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
+            <nav className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-3">
+              <div className="flex items-center gap-6">
+                <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+                  <span className="flex size-6 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
+                    OW
+                  </span>
+                  Open Work
+                </Link>
+                <div className="flex items-center gap-1">
+                  <NavLink href="/">Dashboard</NavLink>
+                  <NavLink href="/workflows">Workflows</NavLink>
+                </div>
+              </div>
+              <Button size="sm" nativeButton={false} render={<Link href="/workflows/new" />}>
+                New workflow
+              </Button>
             </nav>
           </header>
-          <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-6">{children}</main>
+          <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
+          <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
+            Open Work — self-hosted, AGPL-3.0
+          </footer>
         </Providers>
       </body>
     </html>

@@ -2,8 +2,22 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { ArrowRight, Plus, Trash2 } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface StepDraft {
   name: string;
@@ -50,133 +64,173 @@ export default function NewWorkflowPage() {
 
   const canSubmit = name.trim().length > 0 && steps.every((s) => s.employee && s.objective.trim());
 
-  return (
-    <div className="flex flex-col gap-6 max-w-2xl">
-      <h1 className="text-lg font-semibold">Build a new workflow</h1>
+  if (savedYaml) {
+    return (
+      <div className="mx-auto flex max-w-2xl flex-col gap-4">
+        <h1 className="text-2xl font-semibold tracking-tight">Workflow saved</h1>
+        <Alert>
+          <AlertDescription>
+            Saved to <code className="font-mono">config/workflows/{name}.yaml</code>. This is a
+            real file — open it in your editor, commit it to git, or edit it by hand any time.
+          </AlertDescription>
+        </Alert>
+        <Card>
+          <CardContent className="pt-6">
+            <pre className="overflow-x-auto rounded-md bg-muted p-4 font-mono text-xs">{savedYaml}</pre>
+          </CardContent>
+        </Card>
+        <Button className="self-start" onClick={() => router.push("/workflows")}>
+          Go to Workflows <ArrowRight className="size-4" />
+        </Button>
+      </div>
+    );
+  }
 
-      {savedYaml ? (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm">
-            Saved to <code>config/workflows/{name}.yaml</code>. This is a real file — open it in your editor, commit
-            it to git, or edit it by hand any time.
-          </p>
-          <pre className="text-xs bg-black/5 dark:bg-white/5 rounded-md p-3 overflow-x-auto">{savedYaml}</pre>
-          <button type="button" className="self-start text-sm underline" onClick={() => router.push("/workflows")}>
-            Go to Workflows →
-          </button>
-        </div>
-      ) : (
-        <>
-          <label className="flex flex-col gap-1 text-sm">
-            Workflow name
-            <input
-              className="border border-black/15 dark:border-white/20 rounded px-2 py-1"
+  return (
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Build a new workflow</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Pick employees per step, set an objective, generate the same YAML you'd hand-write.
+        </p>
+      </div>
+
+      <Card>
+        <CardContent className="flex flex-col gap-4 pt-6">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="wf-name">Workflow name</Label>
+            <Input
+              id="wf-name"
               value={name}
               onChange={(e) => setName(e.target.value.trim().replace(/\s+/g, "-"))}
               placeholder="my-workflow"
             />
-          </label>
+          </div>
 
-          <label className="flex flex-col gap-1 text-sm">
-            Description (optional)
-            <input
-              className="border border-black/15 dark:border-white/20 rounded px-2 py-1"
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="wf-description">Description (optional)</Label>
+            <Input
+              id="wf-description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
-          </label>
+          </div>
+        </CardContent>
+      </Card>
 
-          <div className="flex flex-col gap-3">
-            <h2 className="text-sm font-semibold opacity-70">Steps (run in order)</h2>
-            {steps.map((step, i) => (
-              <div key={i} className="border border-black/10 dark:border-white/15 rounded-md p-3 flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <input
-                    className="border border-black/15 dark:border-white/20 rounded px-2 py-1 text-sm font-medium"
-                    value={step.name}
-                    onChange={(e) => updateStep(i, { name: e.target.value })}
-                  />
-                  {steps.length > 1 && (
-                    <button
-                      type="button"
-                      className="text-xs opacity-60 hover:opacity-100"
-                      onClick={() => setSteps((prev) => prev.filter((_, idx) => idx !== i))}
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-
-                <select
-                  className="border border-black/15 dark:border-white/20 rounded px-2 py-1 text-sm"
-                  value={step.employee}
-                  onChange={(e) => updateStep(i, { employee: e.target.value })}
+      <div className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-muted-foreground">Steps (run in order)</h2>
+        {steps.map((step, i) => (
+          <Card key={i}>
+            <CardHeader className="flex-row items-center justify-between space-y-0 pb-3">
+              <CardTitle className="text-sm">
+                <Input
+                  className="h-7 w-48 font-medium"
+                  value={step.name}
+                  onChange={(e) => updateStep(i, { name: e.target.value })}
+                />
+              </CardTitle>
+              {steps.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => setSteps((prev) => prev.filter((_, idx) => idx !== i))}
                 >
-                  <option value="">Pick an employee…</option>
-                  {employeesQuery.data?.employees.map((emp) => (
-                    <option key={emp.name} value={emp.name}>
-                      {emp.name} ({emp.role})
-                    </option>
-                  ))}
-                </select>
+                  <Trash2 className="size-3.5" />
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <div className="flex flex-col gap-1.5">
+                <Label>Employee</Label>
+                <Select value={step.employee} onValueChange={(v) => updateStep(i, { employee: v ?? "" })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Pick an employee…" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employeesQuery.data?.employees.map((emp) => (
+                      <SelectItem key={emp.name} value={emp.name}>
+                        {emp.name} ({emp.role})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <textarea
-                  className="border border-black/15 dark:border-white/20 rounded px-2 py-1 text-sm"
-                  placeholder="Objective — use {{param}} for values passed at run time, e.g. Research {{topic}}"
+              <div className="flex flex-col gap-1.5">
+                <Label>Objective</Label>
+                <Textarea
+                  placeholder='Use {{param}} for values passed at run time, e.g. Research {{topic}}'
                   value={step.objective}
                   onChange={(e) => updateStep(i, { objective: e.target.value })}
                   rows={2}
                 />
+              </div>
 
-                <input
-                  className="border border-black/15 dark:border-white/20 rounded px-2 py-1 text-sm"
-                  placeholder="Deliverable filename (optional), e.g. brief.md"
+              <div className="flex flex-col gap-1.5">
+                <Label>Deliverable filename (optional)</Label>
+                <Input
+                  placeholder="brief.md"
                   value={step.deliverable}
                   onChange={(e) => updateStep(i, { deliverable: e.target.value })}
                 />
               </div>
-            ))}
-            <button
-              type="button"
-              className="self-start text-sm underline"
-              onClick={() => setSteps((prev) => [...prev, emptyStep(prev.length)])}
-            >
-              + Add step
-            </button>
-          </div>
+            </CardContent>
+          </Card>
+        ))}
+        <Button
+          variant="outline"
+          size="sm"
+          className="self-start"
+          onClick={() => setSteps((prev) => [...prev, emptyStep(prev.length)])}
+        >
+          <Plus className="size-3.5" /> Add step
+        </Button>
+      </div>
 
+      <Card>
+        <CardContent className="flex flex-col gap-3 pt-6">
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={requireApproval} onChange={(e) => setRequireApproval(e.target.checked)} />
+            <input
+              type="checkbox"
+              className="size-4 rounded border-input"
+              checked={requireApproval}
+              onChange={(e) => setRequireApproval(e.target.checked)}
+            />
             Require human approval after the last step
           </label>
 
           {requireApproval && (
-            <label className="flex items-center gap-2 text-sm">
-              Max retries on reject
-              <input
+            <div className="flex items-center gap-2 text-sm">
+              <Label htmlFor="max-attempts" className="shrink-0">
+                Max retries on reject
+              </Label>
+              <Input
+                id="max-attempts"
                 type="number"
                 min={0}
-                className="border border-black/15 dark:border-white/20 rounded px-2 py-1 w-20"
+                className="w-20"
                 value={maxAttempts}
                 onChange={(e) => setMaxAttempts(Number(e.target.value))}
               />
-            </label>
+            </div>
           )}
+        </CardContent>
+      </Card>
 
-          {createMutation.isError && (
-            <p className="text-sm text-red-700 dark:text-red-400">{(createMutation.error as Error).message}</p>
-          )}
-
-          <button
-            type="button"
-            disabled={!canSubmit || createMutation.isPending}
-            className="self-start text-sm bg-black text-white dark:bg-white dark:text-black rounded px-4 py-2 disabled:opacity-50"
-            onClick={() => createMutation.mutate()}
-          >
-            {createMutation.isPending ? "Saving…" : "Generate & save YAML"}
-          </button>
-        </>
+      {createMutation.isError && (
+        <Alert variant="destructive">
+          <AlertDescription>{(createMutation.error as Error).message}</AlertDescription>
+        </Alert>
       )}
+
+      <Button
+        className="self-start"
+        disabled={!canSubmit || createMutation.isPending}
+        onClick={() => createMutation.mutate()}
+      >
+        {createMutation.isPending ? "Saving…" : "Generate & save YAML"}
+      </Button>
     </div>
   );
 }

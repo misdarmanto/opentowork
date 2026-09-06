@@ -1,11 +1,21 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { ChevronDown, ChevronRight, Play, Plus } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import Link from "next/link";
 import type { Workflow } from "@open-work/core";
+
+type Step = Workflow["steps"][number];
+type HumanStep = Extract<Step, { assignee: "human" }>;
 
 /**
  * Duplicated from @open-work/core's isHumanStep rather than imported: this
@@ -16,9 +26,6 @@ import type { Workflow } from "@open-work/core";
  * this duplication becomes annoying, give @open-work/core a client-safe
  * subpath export instead of splitting the check further.
  */
-type Step = Workflow["steps"][number];
-type HumanStep = Extract<Step, { assignee: "human" }>;
-
 function isHumanStep(step: Step): step is HumanStep {
   return "assignee" in step && step.assignee === "human";
 }
@@ -39,70 +46,102 @@ export default function WorkflowsPage() {
   });
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Workflows</h1>
-        <Link href="/workflows/new" className="text-sm underline">
-          + New workflow
-        </Link>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Workflows</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Defined in <code className="rounded bg-muted px-1 py-0.5 text-xs">config/workflows/*.yaml</code> — git-committed, not a database row.
+          </p>
+        </div>
+        <Button nativeButton={false} render={<Link href="/workflows/new" />}>
+          <Plus className="size-4" /> New workflow
+        </Button>
       </div>
 
-      {workflowsQuery.isLoading && <p className="text-sm opacity-70">Loading…</p>}
       {triggerMutation.isError && (
-        <p className="text-sm text-red-700 dark:text-red-400">{(triggerMutation.error as Error).message}</p>
+        <Alert variant="destructive">
+          <AlertDescription>{(triggerMutation.error as Error).message}</AlertDescription>
+        </Alert>
       )}
 
-      <ul className="flex flex-col gap-3">
-        {workflowsQuery.data?.workflows.map((wf) => (
-          <li key={wf.name} className="border border-black/10 dark:border-white/15 rounded-md p-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="font-medium">{wf.name}</h2>
-                {wf.description && <p className="text-sm opacity-70 mt-1">{wf.description}</p>}
-                <button
-                  type="button"
-                  className="text-xs underline mt-2"
-                  onClick={() => setExpanded(expanded === wf.name ? null : wf.name)}
-                >
-                  {expanded === wf.name ? "Hide steps" : `Show ${wf.steps.length} step(s)`}
-                </button>
-              </div>
-              <div className="flex flex-col gap-2 items-end shrink-0">
-                <input
-                  type="text"
-                  placeholder="topic (optional)"
-                  className="border border-black/15 dark:border-white/20 rounded px-2 py-1 text-sm w-48"
-                  value={paramsByWorkflow[wf.name] ?? ""}
-                  onChange={(e) => setParamsByWorkflow((p) => ({ ...p, [wf.name]: e.target.value }))}
-                />
-                <button
-                  type="button"
-                  disabled={triggerMutation.isPending}
-                  className="text-sm bg-black text-white dark:bg-white dark:text-black rounded px-3 py-1 disabled:opacity-50"
-                  onClick={() => triggerMutation.mutate({ name: wf.name, topic: paramsByWorkflow[wf.name] ?? "" })}
-                >
-                  {triggerMutation.isPending ? "Starting…" : "Run"}
-                </button>
-              </div>
-            </div>
+      {workflowsQuery.isLoading ? (
+        <div className="flex flex-col gap-4">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {workflowsQuery.data?.workflows.map((wf) => {
+            const isExpanded = expanded === wf.name;
+            return (
+              <Card key={wf.name}>
+                <CardHeader className="gap-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <h2 className="font-medium">{wf.name}</h2>
+                      {wf.description && (
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{wf.description}</p>
+                      )}
+                      <button
+                        type="button"
+                        className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => setExpanded(isExpanded ? null : wf.name)}
+                      >
+                        {isExpanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+                        {wf.steps.length} step{wf.steps.length === 1 ? "" : "s"}
+                      </button>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      <Input
+                        placeholder="topic (optional)"
+                        className="w-48"
+                        value={paramsByWorkflow[wf.name] ?? ""}
+                        onChange={(e) => setParamsByWorkflow((p) => ({ ...p, [wf.name]: e.target.value }))}
+                      />
+                      <Button
+                        size="sm"
+                        disabled={triggerMutation.isPending}
+                        onClick={() => triggerMutation.mutate({ name: wf.name, topic: paramsByWorkflow[wf.name] ?? "" })}
+                      >
+                        <Play className="size-3.5" />
+                        {triggerMutation.isPending ? "Starting…" : "Run"}
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
 
-            {expanded === wf.name && (
-              <ol className="mt-3 flex flex-col gap-1 text-sm border-t border-black/5 dark:border-white/10 pt-3">
-                {wf.steps.map((step) => (
-                  <li key={step.name}>
-                    <strong>{step.name}</strong>
-                    {isHumanStep(step) ? (
-                      <span className="opacity-70"> — human approval</span>
-                    ) : (
-                      <span className="opacity-70"> — {step.employee}: {step.handoff.objective}</span>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            )}
-          </li>
-        ))}
-      </ul>
+                {isExpanded && (
+                  <CardContent className="border-t border-border pt-4">
+                    <ol className="flex flex-col gap-2 text-sm">
+                      {wf.steps.map((step, i) => (
+                        <li key={step.name} className="flex items-start gap-2">
+                          <Badge variant="secondary" className="mt-0.5 shrink-0">
+                            {i + 1}
+                          </Badge>
+                          {isHumanStep(step) ? (
+                            <span>
+                              <span className="font-medium">{step.name}</span>{" "}
+                              <span className="text-muted-foreground">— human approval</span>
+                            </span>
+                          ) : (
+                            <span>
+                              <span className="font-medium">{step.name}</span>{" "}
+                              <span className="text-muted-foreground">
+                                — {step.employee}: {step.handoff.objective}
+                              </span>
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ol>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
