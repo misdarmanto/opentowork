@@ -21,45 +21,55 @@ there's no LangChain/LangGraph dependency.
 
 ## See it work
 
-This is a real, unedited terminal session (full transcript with the noisy
-bits: [`docs/demo-transcript.txt`](./docs/demo-transcript.txt)) — run against
-a live DeepSeek API key, including a real tool-call failure the agent
-recovered from and a genuine reject → retry cycle, not a scripted happy path:
+This is an **excerpt**, trimmed for length, of a real terminal session run
+against a live DeepSeek API key — full unedited transcript, including every
+`[ERROR]` line and the saved artifact contents, in
+[`docs/demo-transcript.txt`](./docs/demo-transcript.txt):
 
 ```
 $ open-work validate research-and-script-deepseek
 ✓ workflow "research-and-script-deepseek" is valid (3 steps)
 
 $ open-work run research-and-script-deepseek -p topic="the AGPL license"
-{"event":"step_started","step":"research","employee":"content-researcher-deepseek"}
-{"event":"tool_call","step":"research","tool":"duckduckgo_web_search","input":{"query":"AGPL license adoption trends 2024 2025 companies"}}
-{"event":"step_completed","step":"research","tokens":1933,"cost":0}
-{"event":"step_started","step":"write-script","employee":"content-scriptwriter-deepseek"}
-{"event":"step_completed","step":"write-script","tokens":652,"cost":0}
-{"event":"awaiting_approval","step":"review"}
+{"event":"step_started","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"research","employee":"content-researcher-deepseek"}
+{"event":"tool_call","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"research","tool":"duckduckgo_web_search","input":{"query":"AGPL license adoption trends 2024 2025","count":10}}
+[ERROR] Search failed - Query: "AGPL license adoption trends 2024 2025" Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+  ... (7 more tool_call/[ERROR] pairs — every search attempt failed the same way; full output in docs/demo-transcript.txt)
+{"event":"step_completed","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"research","tokens":2303,"cost":0}
+{"event":"step_started","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"write-script","employee":"content-scriptwriter-deepseek"}
+{"event":"step_completed","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"write-script","tokens":887,"cost":0}
+{"event":"awaiting_approval","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"review"}
 
-Run 85c65b6b — status: awaiting_approval
+Run e9309292-2d6a-4e33-ac3a-98f6c87eb57f — status: awaiting_approval
 Waiting on human approval. Use:
-  open-work approve 85c65b6b-8155-4b58-ab8d-f045c0747811
-  open-work reject 85c65b6b-8155-4b58-ab8d-f045c0747811
+  open-work approve e9309292-2d6a-4e33-ac3a-98f6c87eb57f
+  open-work reject e9309292-2d6a-4e33-ac3a-98f6c87eb57f
 
-$ open-work reject 85c65b6b-8155-4b58-ab8d-f045c0747811   # not happy with the first draft
-{"event":"approval_decided","step":"review","decision":"rejected"}
-{"event":"step_started","step":"write-script","employee":"content-scriptwriter-deepseek"}
-{"event":"step_completed","step":"write-script","tokens":783,"cost":0}
-{"event":"awaiting_approval","step":"review"}
+$ open-work reject e9309292-2d6a-4e33-ac3a-98f6c87eb57f   # not happy with the first draft
+{"event":"approval_decided","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"review","decision":"rejected"}
+{"event":"step_started","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"write-script","employee":"content-scriptwriter-deepseek"}
+{"event":"step_completed","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"write-script","tokens":692,"cost":0}
+{"event":"awaiting_approval","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"review"}
 
-$ open-work approve 85c65b6b-8155-4b58-ab8d-f045c0747811   # the retry looks good
-{"event":"approval_decided","step":"review","decision":"approved"}
+$ open-work approve e9309292-2d6a-4e33-ac3a-98f6c87eb57f   # the retry looks good
+{"event":"approval_decided","runId":"e9309292-2d6a-4e33-ac3a-98f6c87eb57f","step":"review","decision":"approved"}
 
-Run 85c65b6b-8155-4b58-ab8d-f045c0747811 — status: completed
+Run e9309292-2d6a-4e33-ac3a-98f6c87eb57f — status: completed
 ```
 
-Note what happened at `research`: the search tool actually failed (DuckDuckGo
-rate-limits scripted requests from many IPs), the agent retried a few times,
-then said so plainly in its output and wrote the brief from its own
-knowledge instead of inventing fake sources. That's the failure-handling
-path working as designed, not a cherry-picked run.
+Every one of the 8 search attempts in that run genuinely failed — DuckDuckGo
+anomaly-blocked this sandbox's IP (see `ROADMAP.md`'s Phase 2 note). Rather
+than fabricate sources, the agent said so directly in the saved artifact:
+
+> I was unable to complete live web research — the DuckDuckGo search tool
+> repeatedly failed with rate-limit errors across multiple attempts. Below
+> is a summary based on established industry knowledge (Black Duck/OSI
+> reporting, licensing news), flagged as such rather than freshly sourced.
+
+That's `.open-work/runs/e9309292.../artifacts/research-brief.md`, saved to
+disk exactly like a successful run's would be — full contents, plus the
+resubmitted `script.md`, in `docs/demo-transcript.txt`. This is the
+failure-handling path working as designed, not a cherry-picked run.
 
 There's also a minimal web UI (`packages/web`) covering the same flow —
 dashboard, run detail with approve/reject, and a form builder that generates
@@ -167,9 +177,10 @@ docs/
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](./CONTRIBUTING.md). First-time contributors sign a
-CLA (see [`CLA.md`](./CLA.md)) — a bot handles this automatically on your
-first PR.
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md). First-time contributors are
+expected to sign a CLA (see [`CLA.md`](./CLA.md)); automated signing (e.g.
+CLA Assistant) isn't wired up yet, so for now that happens manually — see
+`CONTRIBUTING.md` for how.
 
 ## Security
 

@@ -68,8 +68,10 @@ the diff. No AI attribution trailers.
 Open Work is licensed AGPL-3.0. To keep the option of an eventual hosted
 version open without ever taking the project fully closed-source, first-time
 contributors are asked to sign a CLA — see [CLA.md](./CLA.md) for what it
-says. A bot will comment on your first PR with instructions; you only need
-to do this once.
+says. **Automated signing isn't wired up yet** (no CLA Assistant or
+equivalent bot installed on this repo) — until it is, comment on your PR
+confirming you've read and agree to `CLA.md`, or reach out to the maintainer
+directly. You only need to do this once.
 
 ## Reporting security issues
 

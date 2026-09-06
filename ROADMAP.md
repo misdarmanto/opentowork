@@ -235,26 +235,49 @@ target, noted in `packages/web/README.md`.
 
 ---
 
-## Phase 5 — Portfolio polish
+## Phase 5 — Portfolio polish (mostly done)
 
 Do this last, once the product underneath is actually real — polish on a
 non-functional demo is what makes a portfolio look hollow to someone technical.
 
-1. Record a short terminal + UI demo (asciinema or screen recording) showing:
-   run → tool call → approval reject → retry → approve → artifact saved
-2. README rewrite: architecture diagram (YAML → executor → provider/tools →
-   trace/store), the competitive-positioning section already drafted in
-   `CLAUDE.md`, and the demo embedded at the top
-3. `LICENSE` (AGPL-3.0) + `CONTRIBUTING.md` + a real CLA (e.g. CLA Assistant)
-   — currently only declared in `package.json`, not actually in place
-4. Short written case study (can live in `docs/DESIGN.md` or a blog post):
-   the reliability-math argument for "Human as CEO", the seams-not-microservices
-   argument for scaling, why no LangChain — this is what turns the repo into
-   an interview talking point, not just a code sample
+1. [x] Demo — not a screen recording/asciinema (no such tooling available in
+   the environment this was built in), but a **real, unedited terminal
+   transcript** captured against a live DeepSeek API key:
+   `docs/demo-transcript.txt`, excerpted at the top of `README.md`. Covers
+   run → real tool call (including a genuine failure DuckDuckGo returned,
+   handled gracefully) → reject → real resubmit retry → approve →
+   artifact saved. Deliberately not sanitized — the failed search and the
+   agent's honest disclaimer are left in, since that's more convincing than
+   a cherry-picked happy path. A video/GIF walkthrough of `packages/web`
+   would still be a nice addition later if screen-recording tooling is
+   available.
+2. [x] README rewrite — architecture diagram (mermaid: YAML → executor →
+   provider/tools → trace/store, both CLI and web UI hitting the same
+   executor), the demo transcript embedded near the top, and a
+   competitive-positioning table pulled from the `architecture` skill.
+3. [x] `LICENSE` (AGPL-3.0, official text from gnu.org) + `CONTRIBUTING.md` +
+   `CLA.md` (a standard-shape draft, explicitly flagged as not yet
+   legally reviewed) + `SECURITY.md`. Caught by `spec-reviewer`: the first
+   draft of all three claimed a CLA-signing bot "handles this
+   automatically" — untrue, no bot is installed. Corrected to describe the
+   actual (manual, comment-to-confirm) process, with a note to update the
+   wording once CLA Assistant or similar is actually wired up — a GitHub
+   App install only the repo owner can do.
+4. [x] `docs/DESIGN.md` — the reliability-math case for "Human as CEO"
+   (0.9⁵ ≈ 59%, and why MetaGPT/ChatDev-style agent-negotiated chains hit
+   this in practice), the seams-vs-distributed-system argument, and why
+   not LangChain/LangGraph — written as one coherent argument, not
+   scattered bullets.
 
 **Done when:** a stranger can land on the README, understand what Open Work
 is and why it's designed this way in under a minute, watch a 60-second demo,
-and see CI passing — without cloning anything.
+and see CI passing — without cloning anything. **Mostly done**: the
+transcript + diagram + positioning table + design doc satisfy the
+"understand it in under a minute" bar without cloning. Still open: an
+actual GitHub Actions run needs to be confirmed green by a human with
+repo access (the environment this was built in has no `gh` CLI or API
+token and the repo is private — see Phase 3's note) before the CI badge's
+claim is fully verified rather than just configured correctly.
 
 ---
 

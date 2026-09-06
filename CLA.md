@@ -74,6 +74,9 @@ AGPL-3.0 version — it only adds an option for the Maintainer.
 
 ---
 
-Signing happens automatically the first time you open a pull request, via a
-CLA-signing bot that comments with instructions. You only need to sign once
-per GitHub account.
+**Signing process (current, manual):** no CLA-signing bot is installed on
+this repo yet. Until one is, confirm you've read and agree to this document
+by commenting on your first pull request — the maintainer will note it
+against your GitHub account. You only need to do this once. If/when
+automated signing (e.g. CLA Assistant) is wired up, this section will be
+updated to reflect that instead.
