@@ -1,0 +1,188 @@
+# Real, unedited terminal transcript (except trimming noisy DEBUG log
+# lines from the DuckDuckGo MCP server for readability). Captured running
+# against a real DeepSeek API key, on 2026-09-06. Not staged — the search
+# tool actually failed here (see ROADMAP.md's Phase 2 note on DuckDuckGo
+# anomaly-blocking sandboxed IPs) and the agent handled it by proceeding
+# from its own knowledge instead of fabricating results, which is why the
+# research brief contains a disclaimer. The reject/retry cycle later on IS
+# the real resubmit-to-write-script path, not a canned example.
+
+$ open-work validate research-and-script-deepseek
+✓ workflow "research-and-script-deepseek" is valid (3 steps)
+
+$ open-work run research-and-script-deepseek -p topic="the AGPL license"
+{"event":"step_started","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","employee":"content-researcher-deepseek"}
+[INFO] DuckDuckGo Search MCP Server running on stdio
+{"event":"tool_call","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","tool":"duckduckgo_web_search","input":{"query":"AGPL license adoption trends 2024 2025 companies","count":10}}
+  "name": "duckduckgo_web_search",
+  "arguments": {
+    "query": "AGPL license adoption trends 2024 2025 companies",
+    "count": 10
+  }
+}
+[ERROR] Search failed - Query: "AGPL license adoption trends 2024 2025 companies" Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+[ERROR] Request handler error: Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+{"event":"tool_call","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","tool":"duckduckgo_web_search","input":{"query":"AGPL controversy AI companies licensing backlash open source","count":10}}
+  "name": "duckduckgo_web_search",
+  "arguments": {
+    "query": "AGPL controversy AI companies licensing backlash open source",
+    "count": 10
+  }
+}
+[ERROR] Rate limit exceeded: { second: 1, month: 1, lastReset: 1788679998577 }
+[ERROR] Search failed - Query: "AGPL controversy AI companies licensing backlash open source" Error: Rate limit exceeded
+    at checkRateLimit (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:80:23)
+    at performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:114:9)
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:39
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js:274:79
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js:102:25
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[ERROR] Request handler error: Error: Rate limit exceeded
+    at checkRateLimit (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:80:23)
+    at performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:114:9)
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:39
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js:274:79
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js:102:25
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+{"event":"tool_call","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","tool":"duckduckgo_web_search","input":{"count":10,"query":"AGPL license adoption trends 2024 2025 companies"}}
+  "name": "duckduckgo_web_search",
+  "arguments": {
+    "count": 10,
+    "query": "AGPL license adoption trends 2024 2025 companies"
+  }
+}
+[ERROR] Search failed - Query: "AGPL license adoption trends 2024 2025 companies" Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+[ERROR] Request handler error: Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+{"event":"tool_call","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","tool":"duckduckgo_web_search","input":{"count":10,"query":"AGPL license trends adoption"}}
+  "name": "duckduckgo_web_search",
+  "arguments": {
+    "count": 10,
+    "query": "AGPL license trends adoption"
+  }
+}
+[ERROR] Search failed - Query: "AGPL license trends adoption" Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+[ERROR] Request handler error: Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+{"event":"tool_call","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","tool":"duckduckgo_web_search","input":{"count":10,"query":"AGPL licensing trends"}}
+  "name": "duckduckgo_web_search",
+  "arguments": {
+    "count": 10,
+    "query": "AGPL licensing trends"
+  }
+}
+[ERROR] Rate limit exceeded: { second: 1, month: 3, lastReset: 1788680000767 }
+[ERROR] Search failed - Query: "AGPL licensing trends" Error: Rate limit exceeded
+    at checkRateLimit (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:80:23)
+    at performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:114:9)
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:39
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js:274:79
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js:102:25
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+[ERROR] Request handler error: Error: Rate limit exceeded
+    at checkRateLimit (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:80:23)
+    at performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:114:9)
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:39
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js:274:79
+    at file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/@modelcontextprotocol/sdk/dist/shared/protocol.js:102:25
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+{"event":"tool_call","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","tool":"duckduckgo_web_search","input":{"count":10,"query":"AGPL license trends"}}
+  "name": "duckduckgo_web_search",
+  "arguments": {
+    "count": 10,
+    "query": "AGPL license trends"
+  }
+}
+[ERROR] Search failed - Query: "AGPL license trends" Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+[ERROR] Request handler error: Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+{"event":"tool_call","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","tool":"duckduckgo_web_search","input":{"count":8,"query":"AGPL open source license news"}}
+  "name": "duckduckgo_web_search",
+  "arguments": {
+    "count": 8,
+    "query": "AGPL open source license news"
+  }
+}
+[ERROR] Search failed - Query: "AGPL open source license news" Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+[ERROR] Request handler error: Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+{"event":"tool_call","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","tool":"duckduckgo_web_search","input":{"count":8,"query":"AGPL AI training license switch developers"}}
+  "name": "duckduckgo_web_search",
+  "arguments": {
+    "count": 8,
+    "query": "AGPL AI training license switch developers"
+  }
+}
+[ERROR] Search failed - Query: "AGPL AI training license switch developers" Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+[ERROR] Request handler error: Error: DDG detected an anomaly in the request, you are likely making requests too quickly.
+    at Module.search (/Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duck-duck-scrape/lib/search/search.js:80:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async performWebSearch (file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:120:31)
+    at async file:///Users/dear/.npm/_npx/c01941eaca6ed980/node_modules/duckduckgo-mcp-server/build/index.js:181:33
+{"event":"step_completed","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"research","tokens":1933,"cost":0}
+{"event":"step_started","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"write-script","employee":"content-scriptwriter-deepseek"}
+{"event":"step_completed","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"write-script","tokens":652,"cost":0}
+{"event":"awaiting_approval","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"review"}
+
+Run 85c65b6b-8155-4b58-ab8d-f045c0747811 — status: awaiting_approval
+Waiting on human approval. Use:
+  open-work approve 85c65b6b-8155-4b58-ab8d-f045c0747811
+  open-work reject 85c65b6b-8155-4b58-ab8d-f045c0747811
+
+$ open-work reject 85c65b6b-8155-4b58-ab8d-f045c0747811 # not happy with the first draft
+{"event":"approval_decided","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"review","decision":"rejected"}
+{"event":"step_started","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"write-script","employee":"content-scriptwriter-deepseek"}
+{"event":"step_completed","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"write-script","tokens":783,"cost":0}
+{"event":"awaiting_approval","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"review"}
+
+Run 85c65b6b-8155-4b58-ab8d-f045c0747811 — status: awaiting_approval
+Waiting on human approval. Use:
+  open-work approve 85c65b6b-8155-4b58-ab8d-f045c0747811
+  open-work reject 85c65b6b-8155-4b58-ab8d-f045c0747811
+
+$ open-work approve 85c65b6b-8155-4b58-ab8d-f045c0747811 # the retry looks good
+{"event":"approval_decided","runId":"85c65b6b-8155-4b58-ab8d-f045c0747811","step":"review","decision":"approved"}
+
+Run 85c65b6b-8155-4b58-ab8d-f045c0747811 — status: completed
+
+RUN_ID=85c65b6b-8155-4b58-ab8d-f045c0747811
