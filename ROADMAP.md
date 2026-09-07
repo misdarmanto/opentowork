@@ -318,15 +318,30 @@ decides the run order.
    end-to-end with a live DeepSeek call whose output began with a literal
    marker string and visibly followed the skill's own instructions.
    (`packages/core/src/schema/skill.ts`, `packages/core/src/tools/registry.ts`)
-4. [ ] Web UI: connector management (list/create/edit `config/connectors/*.yaml`
-   through the builder), skill management, and an employee builder page
-   (`/employees/new` — currently missing entirely; the web UI can build
-   workflows but has no form for authoring an employee YAML).
+4. [x] Web UI: list + create pages for connectors (`/connectors`,
+   `/connectors/new`), skills (`/skills`, `/skills/new`), and employees
+   (`/employees`, `/employees/new` — previously missing entirely; the web
+   UI could build workflows but had no form for authoring an employee at
+   all). Each builder generates the same YAML a developer would hand-write
+   (same dual-interface decision as the workflow builder) and the employee
+   builder lets you pick existing skills/connectors by checkbox — including
+   graying out a connector already pulled in by a selected skill, since an
+   employee's own tools and a skill's tools resolving to the same name
+   throws at run time (see `packages/core/src/tools/registry.ts`'s duplicate
+   check). Editing an existing connector/skill/employee through the UI is
+   still not built — only create; hand-edit the YAML for now.
 
 **Done when:** a user can create a connector and a skill through the web UI
 with no hand-written YAML, attach both to a new employee built the same way,
 and chain that employee into an existing workflow — end to end, verified
-with a real run (not just a passing build).
+with a real run (not just a passing build). **Verified**: created a custom
+connector (`word-count`, a real `.mjs` tool file), a skill wrapping it
+(`text-analysis`), and an employee attaching that skill — all three through
+the actual browser UI, nothing hand-written — then ran a workflow chaining
+that employee against a live DeepSeek call. The model called the real
+`word_count` tool and reported the exact count first, per the skill's own
+instructions. All three temporary YAML files and the tool file were deleted
+after — this feature ships with no bundled `word-count` connector/skill.
 
 ---
 

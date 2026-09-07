@@ -1,4 +1,4 @@
-import type { Employee, ExecutionState, Workflow } from "@open-work/core";
+import type { Connector, Employee, ExecutionState, Skill, Workflow } from "@open-work/core";
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -61,6 +61,23 @@ export const api = {
   resumeRun: (id: string) => request<{ state: ExecutionState }>(`/api/runs/${id}/resume`, { method: "POST" }),
   createWorkflow: (input: unknown) =>
     request<{ workflow: Workflow; yamlText: string }>("/api/workflows", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  listConnectors: () => request<{ connectors: Connector[] }>("/api/connectors"),
+  createConnector: (input: unknown) =>
+    request<{ connector: Connector; yamlText: string }>("/api/connectors", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  listSkills: () => request<{ skills: Skill[] }>("/api/skills"),
+  createSkill: (input: unknown) =>
+    request<{ skill: Skill; yamlText: string }>("/api/skills", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  createEmployee: (input: unknown) =>
+    request<{ employee: Employee; yamlText: string }>("/api/employees", {
       method: "POST",
       body: JSON.stringify(input),
     }),

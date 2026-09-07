@@ -41,6 +41,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 <div className="flex items-center gap-1">
                   <NavLink href="/">Dashboard</NavLink>
                   <NavLink href="/workflows">Workflows</NavLink>
+                  <NavLink href="/employees">Employees</NavLink>
+                  <NavLink href="/skills">Skills</NavLink>
+                  <NavLink href="/connectors">Connectors</NavLink>
                 </div>
               </div>
               <Button size="sm" nativeButton={false} render={<Link href="/workflows/new" />}>
