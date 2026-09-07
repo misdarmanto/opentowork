@@ -7,6 +7,7 @@ import { parse as parseYAML } from "yaml";
 import {
   parseConnector,
   parseEmployee,
+  parseSkill,
   parseWorkflow,
   ProviderFactory,
   AnthropicProvider,
@@ -19,6 +20,7 @@ import {
   isHumanStep,
   type Connector,
   type Employee,
+  type Skill,
   type Workflow,
   type ExecutionState,
 } from "@open-work/core";
@@ -38,10 +40,10 @@ function loadWorkflowFile(name: string): Workflow {
   return parseWorkflow(raw);
 }
 
-// Employee/connector names become filenames on disk (config/employees/<name>.yaml,
-// config/connectors/<name>.yaml). Without this, a name like "../../evil" read from
-// workflow/employee YAML would read outside those directories entirely — same
-// concern as packages/web/lib/server/workflows.ts's assertSafeFileName.
+// Employee/connector/skill names become filenames on disk (config/employees/<name>.yaml,
+// config/connectors/<name>.yaml, config/skills/<name>.yaml). Without this, a name like
+// "../../evil" read from workflow/employee YAML would read outside those directories
+// entirely — same concern as packages/web/lib/server/workflows.ts's assertSafeFileName.
 const SAFE_NAME = /^[a-z0-9][a-z0-9_-]*$/i;
 
 function assertSafeFileName(name: string): void {
@@ -64,6 +66,13 @@ async function loadConnector(name: string): Promise<Connector> {
   return parseConnector(raw);
 }
 
+async function loadSkill(name: string): Promise<Skill> {
+  assertSafeFileName(name);
+  const filePath = path.join(CONFIG_DIR, "skills", `${name}.yaml`);
+  const raw = parseYAML(fs.readFileSync(filePath, "utf-8"));
+  return parseSkill(raw);
+}
+
 function buildProviderFactory(): ProviderFactory {
   const factory = new ProviderFactory();
   if (process.env.ANTHROPIC_API_KEY) {
@@ -83,7 +92,7 @@ function buildProviderFactory(): ProviderFactory {
 function buildExecutor(store: RunStore, runId: string): WorkflowExecutor {
   const providers = buildProviderFactory();
   const tracer = combineTracers({ log: (e) => console.log(JSON.stringify(e)) }, createFileTracer(RUNS_DIR, runId));
-  return new WorkflowExecutor(providers, store, loadEmployee, tracer, PROJECT_ROOT, loadConnector);
+  return new WorkflowExecutor(providers, store, loadEmployee, tracer, PROJECT_ROOT, loadConnector, loadSkill);
 }
 
 /** step name -> deliverable filename, for every agent step that declares one. */

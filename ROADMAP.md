@@ -305,12 +305,19 @@ decides the run order.
    `content-researcher-deepseek` migrated to share one `duckduckgo`
    connector as the first real usage.
    (`packages/core/src/schema/connector.ts`, `packages/core/src/tools/registry.ts`)
-3. [ ] Skills — reusable capability packages (`config/skills/*.yaml`):
+3. [x] Skills — reusable capability packages (`config/skills/*.yaml`):
    instructions text + a set of tools/connectors, referenced from employee
-   YAML's existing `skills:` list (today that list is declared but never
-   actually loaded or used by the executor). Should append into
-   `buildSystemPrompt`'s `extraInstructions` param, added in step 1
-   specifically to make this composable without another refactor.
+   YAML's existing `skills:` list (previously declared but never actually
+   loaded or used by the executor — pure dead config). Resolved via an
+   injected `SkillLoader` (same seam as `EmployeeLoader`/`ConnectorLoader`),
+   instructions appended into `buildSystemPrompt`'s `extraInstructions`
+   param, tools merged into the employee's own tool list. The three skill
+   names already referenced by `content-researcher(-deepseek)` and
+   `content-scriptwriter(-deepseek)` (`web-research`, `source-verification`,
+   `short-form-scriptwriting`) got real files for the first time, verified
+   end-to-end with a live DeepSeek call whose output began with a literal
+   marker string and visibly followed the skill's own instructions.
+   (`packages/core/src/schema/skill.ts`, `packages/core/src/tools/registry.ts`)
 4. [ ] Web UI: connector management (list/create/edit `config/connectors/*.yaml`
    through the builder), skill management, and an employee builder page
    (`/employees/new` — currently missing entirely; the web UI can build

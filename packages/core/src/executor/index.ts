@@ -4,7 +4,7 @@ import { isHumanStep, type Workflow, type WorkflowStep } from "../schema/workflo
 import type { ProviderFactory } from "../providers/factory.js";
 import type { ContentBlock, MessageParam } from "../providers/types.js";
 import type { RunStore } from "../store/index.js";
-import { closeTools, loadToolsForEmployee, type ConnectorLoader } from "../tools/registry.js";
+import { closeTools, loadSkillsForEmployee, loadToolsForEmployee, type ConnectorLoader, type SkillLoader } from "../tools/registry.js";
 import { buildSystemPrompt } from "./system-prompt.js";
 
 export interface Tracer {
@@ -35,6 +35,8 @@ export class WorkflowExecutor {
     private readonly projectRoot: string = process.cwd(),
     /** Resolves a `{type: connector, connector: <name>}` tool reference. Optional — omitting it is fine as long as no employee actually uses one. */
     private readonly loadConnector?: ConnectorLoader,
+    /** Resolves a name in an employee's `skills:` list. Optional — omitting it is fine as long as no employee actually lists one. */
+    private readonly loadSkill?: SkillLoader,
   ) {}
 
   /**
@@ -242,10 +244,14 @@ export class WorkflowExecutor {
     runId: string,
     stepName: string,
   ): Promise<{ artifact: string; inputTokens: number; outputTokens: number; cost: number }> {
-    const tools = await loadToolsForEmployee(employee, this.projectRoot, this.loadConnector);
+    const skills = await loadSkillsForEmployee(employee, this.loadSkill);
+    const tools = await loadToolsForEmployee(employee, this.projectRoot, this.loadConnector, skills);
     const toolByName = new Map(tools.map((t) => [t.name, t]));
     const toolSchemas = tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
-    const system = buildSystemPrompt(employee);
+    const system = buildSystemPrompt(
+      employee,
+      skills.map((s) => s.instructions),
+    );
 
     try {
       const messages: MessageParam[] = [{ role: "user", content: objective }];

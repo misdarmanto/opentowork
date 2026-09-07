@@ -373,6 +373,62 @@ describe("WorkflowExecutor", () => {
     expect(state.status).toBe("completed");
     expect(state.stepOutputs.get("research")).toBe("done via connector");
   });
+
+  it("resolves employee.skills via loadSkill, appending instructions to the system prompt and merging skill tools", async () => {
+    const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "tools", "__fixtures__");
+
+    const workflow: Workflow = {
+      name: "with-skill",
+      trigger: "manual",
+      steps: [
+        {
+          name: "research",
+          employee: "content-researcher",
+          handoff: { objective: "Echo something", constraints: [] },
+        },
+      ],
+    };
+
+    let capturedSystem: string | undefined;
+    let skillLookups = 0;
+    const provider = {
+      call: async (_provider: unknown, _messages: unknown, _model: unknown, _tools: unknown, system?: string) => {
+        capturedSystem = system;
+        return {
+          id: "fake",
+          content: [{ type: "text" as const, text: "done" }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 5, outputTokens: 5 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(
+      provider,
+      store,
+      async () => fakeEmployee({ skills: ["web-research"] }),
+      { log: () => {} },
+      fixturesDir,
+      undefined,
+      async (name) => {
+        skillLookups++;
+        expect(name).toBe("web-research");
+        return {
+          name: "web-research",
+          instructions: "Prefer primary sources and always include a URL per claim.",
+          tools: [{ type: "custom", name: "echo", path: "echo-custom-tool.mjs" }],
+        };
+      },
+    );
+
+    const state = await executor.run(workflow);
+
+    expect(skillLookups).toBe(1);
+    expect(capturedSystem).toContain("Prefer primary sources and always include a URL per claim.");
+    expect(state.status).toBe("completed");
+    expect(state.stepOutputs.get("research")).toBe("done");
+  });
 });
 
 describe("WorkflowExecutor.approve / reject / resume", () => {

@@ -3,7 +3,8 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { Employee } from "../schema/employee.js";
 import type { Connector } from "../schema/connector.js";
-import { loadToolsForEmployee } from "./registry.js";
+import type { Skill } from "../schema/skill.js";
+import { loadSkillsForEmployee, loadToolsForEmployee } from "./registry.js";
 
 const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "__fixtures__");
 
@@ -49,5 +50,71 @@ describe("loadToolsForEmployee — connector references", () => {
     await expect(
       loadToolsForEmployee(fakeEmployee({ tools: [{ type: "builtin", name: "kb" }] }), fixturesDir),
     ).rejects.toThrow(/not implemented yet/);
+  });
+});
+
+describe("loadSkillsForEmployee", () => {
+  it("resolves each name in employee.skills via the injected loader", async () => {
+    const skill: Skill = { name: "web-research", instructions: "Prefer primary sources.", tools: [] };
+    const skills = await loadSkillsForEmployee(fakeEmployee({ skills: ["web-research"] }), async (name) => {
+      expect(name).toBe("web-research");
+      return skill;
+    });
+    expect(skills).toEqual([skill]);
+  });
+
+  it("throws a clear error when no loader was configured", async () => {
+    await expect(loadSkillsForEmployee(fakeEmployee({ skills: ["x"] }))).rejects.toThrow(
+      /no skill loader was configured/,
+    );
+  });
+});
+
+describe("loadToolsForEmployee — skill-contributed tools", () => {
+  it("merges a skill's tools alongside the employee's own tools", async () => {
+    const skill: Skill = {
+      name: "web-research",
+      instructions: "Prefer primary sources.",
+      tools: [{ type: "custom", name: "echo", path: "echo-custom-tool.mjs" }],
+    };
+    const tools = await loadToolsForEmployee(fakeEmployee({ tools: [] }), fixturesDir, undefined, [skill]);
+    expect(tools).toHaveLength(1);
+    expect(tools[0].name).toBe("echo");
+  });
+
+  it("resolves a skill's {type: connector} tool through the same injected connector loader", async () => {
+    const connector: Connector = { type: "custom", name: "echo", path: "echo-custom-tool.mjs" };
+    const skill: Skill = {
+      name: "web-research",
+      instructions: "Prefer primary sources.",
+      tools: [{ type: "connector", connector: "shared-echo" }],
+    };
+    const tools = await loadToolsForEmployee(
+      fakeEmployee({ tools: [] }),
+      fixturesDir,
+      async (name) => {
+        expect(name).toBe("shared-echo");
+        return connector;
+      },
+      [skill],
+    );
+    expect(tools).toHaveLength(1);
+    expect(tools[0].name).toBe("echo");
+  });
+
+  it("throws a clear error when the employee's own tools and a skill both contribute a tool with the same name", async () => {
+    const skill: Skill = {
+      name: "web-research",
+      instructions: "Prefer primary sources.",
+      tools: [{ type: "custom", name: "echo", path: "echo-custom-tool.mjs" }],
+    };
+    await expect(
+      loadToolsForEmployee(
+        fakeEmployee({ tools: [{ type: "custom", name: "echo", path: "echo-custom-tool.mjs" }] }),
+        fixturesDir,
+        undefined,
+        [skill],
+      ),
+    ).rejects.toThrow(/two tools named "echo"/);
   });
 });

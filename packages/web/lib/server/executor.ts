@@ -10,17 +10,19 @@ import {
   isHumanStep,
   parseConnector,
   parseEmployee,
+  parseSkill,
   writeArtifacts,
   writeStateSnapshot,
   type Connector,
   type Employee,
   type ExecutionState,
+  type Skill,
   type Workflow,
 } from "@open-work/core";
 import { CONFIG_DIR, PROJECT_ROOT, RUNS_DIR } from "./paths";
 import { getStore } from "./store";
 
-// Employee/connector names become filenames on disk — same path-traversal
+// Employee/connector/skill names become filenames on disk — same path-traversal
 // concern assertSafeFileName in ./workflows.ts guards against for workflow names.
 const SAFE_NAME = /^[a-z0-9][a-z0-9_-]*$/i;
 
@@ -40,6 +42,12 @@ async function loadConnector(name: string): Promise<Connector> {
   assertSafeFileName(name);
   const filePath = path.join(CONFIG_DIR, "connectors", `${name}.yaml`);
   return parseConnector(parseYAML(fs.readFileSync(filePath, "utf-8")));
+}
+
+async function loadSkill(name: string): Promise<Skill> {
+  assertSafeFileName(name);
+  const filePath = path.join(CONFIG_DIR, "skills", `${name}.yaml`);
+  return parseSkill(parseYAML(fs.readFileSync(filePath, "utf-8")));
 }
 
 function buildProviderFactory(): ProviderFactory {
@@ -62,7 +70,7 @@ function buildExecutor(runId: string): WorkflowExecutor {
     { log: (e) => console.log(JSON.stringify(e)) },
     createFileTracer(RUNS_DIR, runId),
   );
-  return new WorkflowExecutor(providers, getStore(), loadEmployee, tracer, PROJECT_ROOT, loadConnector);
+  return new WorkflowExecutor(providers, getStore(), loadEmployee, tracer, PROJECT_ROOT, loadConnector, loadSkill);
 }
 
 function deliverablesOf(workflow: Workflow): Map<string, string> {
