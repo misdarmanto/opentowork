@@ -1,16 +1,25 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmployeeForm } from "@/components/forms/employee-form";
 
 export default function EmployeesPage() {
   const employeesQuery = useQuery({ queryKey: ["employees"], queryFn: api.listEmployees });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+
+  const openDialog = () => {
+    setFormKey((k) => k + 1);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -22,10 +31,29 @@ export default function EmployeesPage() {
             a provider/model, attach skills and connectors, use them as steps in any workflow.
           </p>
         </div>
-        <Button nativeButton={false} render={<Link href="/employees/new" />}>
+        <Button onClick={openDialog}>
           <Plus className="size-4" /> New employee
         </Button>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Build a new employee</DialogTitle>
+            <DialogDescription>
+              Persona, model, skills and connectors - the same YAML you'd hand-write in{" "}
+              <code className="rounded bg-muted px-1 py-0.5 text-xs">config/employees/</code>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto pr-1">
+            <EmployeeForm
+              key={formKey}
+              onCreated={() => setDialogOpen(false)}
+              onCancel={() => setDialogOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {employeesQuery.isLoading ? (
         <div className="flex flex-col gap-4">

@@ -1,16 +1,25 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SkillForm } from "@/components/forms/skill-form";
 
 export default function SkillsPage() {
   const skillsQuery = useQuery({ queryKey: ["skills"], queryFn: api.listSkills });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+
+  const openDialog = () => {
+    setFormKey((k) => k + 1);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -23,10 +32,24 @@ export default function SkillsPage() {
             appended to an employee's system prompt, plus any tools the skill contributes.
           </p>
         </div>
-        <Button nativeButton={false} render={<Link href="/skills/new" />}>
+        <Button onClick={openDialog}>
           <Plus className="size-4" /> New skill
         </Button>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>New skill</DialogTitle>
+            <DialogDescription>
+              Instructions get appended to the system prompt of any employee that lists this skill.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto pr-1">
+            <SkillForm key={formKey} onCreated={() => setDialogOpen(false)} onCancel={() => setDialogOpen(false)} />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {skillsQuery.isLoading ? (
         <div className="flex flex-col gap-4">

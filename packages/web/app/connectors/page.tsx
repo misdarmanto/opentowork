@@ -1,16 +1,25 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ConnectorForm } from "@/components/forms/connector-form";
 
 export default function ConnectorsPage() {
   const connectorsQuery = useQuery({ queryKey: ["connectors"], queryFn: api.listConnectors });
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [formKey, setFormKey] = useState(0);
+
+  const openDialog = () => {
+    setFormKey((k) => k + 1);
+    setDialogOpen(true);
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -23,10 +32,28 @@ export default function ConnectorsPage() {
             any employee by name instead of repeating the MCP/custom setup.
           </p>
         </div>
-        <Button nativeButton={false} render={<Link href="/connectors/new" />}>
+        <Button onClick={openDialog}>
           <Plus className="size-4" /> New connector
         </Button>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>New connector</DialogTitle>
+            <DialogDescription>
+              A named, reusable MCP server or custom tool - attach it to as many employees as you like.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto pr-1">
+            <ConnectorForm
+              key={formKey}
+              onCreated={() => setDialogOpen(false)}
+              onCancel={() => setDialogOpen(false)}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {connectorsQuery.isLoading ? (
         <div className="flex flex-col gap-4">

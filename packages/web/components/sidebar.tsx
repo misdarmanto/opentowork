@@ -79,7 +79,7 @@ export function Sidebar() {
           size="sm"
           className={cn("w-full", collapsed && "px-0")}
           nativeButton={false}
-          render={<Link href="/workflows/new" title="New workflow" />}
+          render={<Link href="/workflows?new=1" title="New workflow" />}
         >
           <Plus className="size-4" />
           {!collapsed && "New workflow"}
