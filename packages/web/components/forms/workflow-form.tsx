@@ -102,7 +102,7 @@ export function WorkflowForm({ onCreated, onCancel }: { onCreated: () => void; o
           <div key={i} className="flex flex-col gap-3 rounded-lg border border-border p-3">
             <div className="flex items-center justify-between gap-2">
               <Input
-                className="h-7 w-48 font-medium"
+                className="h-7 min-w-0 max-w-48 flex-1 font-medium"
                 value={step.name}
                 onChange={(e) => updateStep(i, { name: e.target.value })}
               />

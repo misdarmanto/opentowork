@@ -45,7 +45,7 @@ export default function EmployeesPage() {
               <code className="rounded bg-muted px-1 py-0.5 text-xs">config/employees/</code>.
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto pr-1">
+          <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden pr-2">
             <EmployeeForm
               key={formKey}
               onCreated={() => setDialogOpen(false)}

@@ -109,7 +109,7 @@ export default function WorkflowsPage() {
               Pick employees per step, set an objective, generate the same YAML you'd hand-write.
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto pr-1">
+          <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden pr-2">
             <WorkflowForm
               key={formKey}
               onCreated={() => setDialogOpen(false)}
