@@ -1,15 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Building2, Cpu, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmployeeForm } from "@/components/forms/employee-form";
+
+/** "content-researcher-deepseek" -> "CR" - employee names are hyphenated slugs, not human names. */
+function initials(name: string): string {
+  const parts = name.split(/[-_\s]+/).filter(Boolean);
+  const letters = parts.slice(0, 2).map((p) => p[0]?.toUpperCase() ?? "");
+  return letters.join("") || "?";
+}
 
 export default function EmployeesPage() {
   const employeesQuery = useQuery({ queryKey: ["employees"], queryFn: api.listEmployees });
@@ -56,47 +63,54 @@ export default function EmployeesPage() {
       </Dialog>
 
       {employeesQuery.isLoading ? (
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
-          {employeesQuery.data?.employees.map((emp) => (
-            <Card key={emp.name}>
-              <CardHeader className="gap-2">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h2 className="font-medium">{emp.name}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {emp.role}
-                      {emp.department ? ` · ${emp.department}` : ""}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {employeesQuery.data?.employees.map((emp) => {
+            const tags = [...emp.skills, ...emp.tools.map((t) => (t.type === "connector" ? t.connector : t.name))];
+            return (
+              <Card key={emp.name} className="gap-0 overflow-hidden py-0">
+                <div className="h-14 bg-gradient-to-r from-primary/25 via-primary/10 to-transparent" />
+                <CardContent className="flex flex-col items-center px-4 pt-0 pb-4 text-center">
+                  <span className="-mt-8 flex size-16 shrink-0 items-center justify-center rounded-full border-4 border-card bg-primary text-lg font-semibold text-primary-foreground">
+                    {initials(emp.name)}
+                  </span>
+                  <h2 className="mt-2 font-semibold">{emp.name}</h2>
+                  <p className="text-sm text-muted-foreground">{emp.role}</p>
+                  {emp.department && (
+                    <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                      <Building2 className="size-3" />
+                      {emp.department}
                     </p>
-                  </div>
-                  <Badge variant="secondary">
+                  )}
+                  <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                    <Cpu className="size-3" />
                     {emp.provider} / {emp.model}
-                  </Badge>
-                </div>
-                {emp.description && <p className="text-sm text-muted-foreground">{emp.description}</p>}
-                {(emp.skills.length > 0 || emp.tools.length > 0) && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {emp.skills.map((s) => (
-                      <Badge key={`skill-${s}`} variant="outline">
-                        {s}
-                      </Badge>
-                    ))}
-                    {emp.tools.map((t, i) => (
-                      <Badge key={`tool-${i}`} variant="outline">
-                        {t.type === "connector" ? t.connector : t.name}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </CardHeader>
-            </Card>
-          ))}
+                  </p>
+
+                  {emp.description && (
+                    <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">{emp.description}</p>
+                  )}
+
+                  {tags.length > 0 && (
+                    <div className="mt-3 flex w-full flex-wrap justify-center gap-1.5 border-t border-border pt-3">
+                      {tags.map((tag, i) => (
+                        <Badge key={`${tag}-${i}`} variant="outline">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
           {employeesQuery.data?.employees.length === 0 && (
-            <Card>
+            <Card className="sm:col-span-2 lg:col-span-3">
               <CardContent className="py-8 text-center text-sm text-muted-foreground">No employees yet.</CardContent>
             </Card>
           )}
