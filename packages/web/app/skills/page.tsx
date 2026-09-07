@@ -38,7 +38,7 @@ export default function SkillsPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>New skill</DialogTitle>
             <DialogDescription>
