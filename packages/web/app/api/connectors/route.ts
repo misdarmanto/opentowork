@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { buildConnectorFromForm, listConnectors, saveConnector, type ConnectorFormInput } from "@/lib/server/workflows";
+import { apiLogger } from "@/lib/server/logger";
 
 export async function GET() {
   try {
     const connectors = listConnectors();
     return NextResponse.json({ connectors });
   } catch (err) {
+    apiLogger.error("request failed", { route: "/api/connectors", err });
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
@@ -17,6 +19,7 @@ export async function POST(request: Request) {
     saveConnector(connector, yamlText);
     return NextResponse.json({ connector, yamlText }, { status: 201 });
   } catch (err) {
+    apiLogger.error("request failed", { route: "/api/connectors", err });
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
   }
 }

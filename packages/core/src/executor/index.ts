@@ -6,6 +6,9 @@ import type { ContentBlock, MessageParam } from "../providers/types.js";
 import type { RunStore } from "../store/index.js";
 import { closeTools, loadSkillsForEmployee, loadToolsForEmployee, type ConnectorLoader, type SkillLoader } from "../tools/registry.js";
 import { buildSystemPrompt } from "./system-prompt.js";
+import { createLogger } from "../logger.js";
+
+const logger = createLogger("executor");
 
 export interface Tracer {
   log(entry: Record<string, unknown>): void;
@@ -183,6 +186,7 @@ export class WorkflowExecutor {
       this.store.updateRunStatus(state.runId, "completed", { completedAt: new Date() });
     } catch (err) {
       state.status = "failed";
+      logger.error("run failed", { runId: state.runId, workflow: state.workflow.name, err });
       this.store.updateRunStatus(state.runId, "failed", {
         errorMessage: err instanceof Error ? err.message : String(err),
       });
@@ -314,6 +318,7 @@ export class WorkflowExecutor {
               const result = await tool.execute(toolUse.input);
               toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: result });
             } catch (err) {
+              logger.error("tool execution failed", { runId, step: stepName, tool: toolUse.name, err });
               toolResults.push({
                 type: "tool_result",
                 tool_use_id: toolUse.id,
@@ -331,9 +336,11 @@ export class WorkflowExecutor {
         // Any other stop reason (e.g. max_tokens) is a hard failure rather
         // than a silent partial result - see CLAUDE.md's "don't claim
         // something works" rule applied to the agent's own output.
+        logger.error("unhandled stop reason", { runId, step: stepName, employee: employee.name, stopReason: response.stopReason });
         throw new Error(`Unhandled stop reason "${response.stopReason}" for employee "${employee.name}"`);
       }
 
+      logger.error("employee exceeded max_turns", { runId, step: stepName, employee: employee.name, maxTurns: employee.constraints.max_turns });
       throw new Error(`Employee "${employee.name}" exceeded max_turns (${employee.constraints.max_turns})`);
     } finally {
       await closeTools(tools);

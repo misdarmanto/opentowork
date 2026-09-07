@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStore } from "@/lib/server/store";
 import { getWorkflow } from "@/lib/server/workflows";
 import { resumeRun } from "@/lib/server/executor";
+import { apiLogger } from "@/lib/server/logger";
 
 export async function POST(_request: Request, ctx: RouteContext<"/api/runs/[id]/resume">) {
   const { id } = await ctx.params;
@@ -15,6 +16,7 @@ export async function POST(_request: Request, ctx: RouteContext<"/api/runs/[id]/
     const state = await resumeRun(id, workflow);
     return NextResponse.json({ state });
   } catch (err) {
+    apiLogger.error("request failed", { route: "/api/runs/[id]/resume", err });
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
   }
 }

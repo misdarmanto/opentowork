@@ -1,6 +1,7 @@
 import { ALL_PROVIDERS, type Provider } from "@open-work/core";
 import { NextResponse } from "next/server";
 import { addCustomModel, clearApiKey, getSettingsView, removeCustomModel, setApiKey } from "@/lib/server/settings";
+import { apiLogger } from "@/lib/server/logger";
 
 function isProvider(value: unknown): value is Provider {
   return typeof value === "string" && (ALL_PROVIDERS as readonly string[]).includes(value);
@@ -10,6 +11,7 @@ export async function GET() {
   try {
     return NextResponse.json(getSettingsView());
   } catch (err) {
+    apiLogger.error("request failed", { route: "/api/settings", err });
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
@@ -48,6 +50,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(getSettingsView());
   } catch (err) {
+    apiLogger.error("request failed", { route: "/api/settings", err });
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
   }
 }

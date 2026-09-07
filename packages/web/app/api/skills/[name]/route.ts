@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { buildSkillFromForm, saveSkill, type SkillFormInput } from "@/lib/server/workflows";
+import { apiLogger } from "@/lib/server/logger";
 
 /**
  * Renaming isn't supported here - the route param names the file to
@@ -14,6 +15,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ name
     saveSkill(skill, yamlText, { overwrite: true });
     return NextResponse.json({ skill, yamlText });
   } catch (err) {
+    apiLogger.error("request failed", { route: "/api/skills/[name]", err });
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
   }
 }

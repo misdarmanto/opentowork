@@ -2,6 +2,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { ToolConfig } from "../schema/tool.js";
 import type { LoadedTool } from "./types.js";
+import { createLogger } from "../logger.js";
+
+const logger = createLogger("tools:mcp");
 
 type McpToolConfig = Extract<ToolConfig, { type: "mcp" }>;
 
@@ -31,7 +34,13 @@ export async function loadMcpTools(config: McpToolConfig): Promise<LoadedTool[]>
 
   const transport = new StdioClientTransport({ command: config.command, args: config.args, env });
   const client = new Client({ name: "open-work", version: "0.1.0" }, { capabilities: {} });
-  await client.connect(transport);
+
+  try {
+    await client.connect(transport);
+  } catch (err) {
+    logger.error("mcp connect failed", { tool: config.name, command: config.command, err });
+    throw err;
+  }
 
   const { tools } = await client.listTools();
   let closed = false;
@@ -46,15 +55,20 @@ export async function loadMcpTools(config: McpToolConfig): Promise<LoadedTool[]>
     description: tool.description ?? "",
     inputSchema: tool.inputSchema as Record<string, unknown>,
     async execute(input: unknown): Promise<string> {
-      const result = await client.callTool({
-        name: tool.name,
-        arguments: input as Record<string, unknown>,
-      });
-      const content = result.content as Array<{ type: string; text?: string }>;
-      return content
-        .filter((c) => c.type === "text" && typeof c.text === "string")
-        .map((c) => c.text)
-        .join("\n");
+      try {
+        const result = await client.callTool({
+          name: tool.name,
+          arguments: input as Record<string, unknown>,
+        });
+        const content = result.content as Array<{ type: string; text?: string }>;
+        return content
+          .filter((c) => c.type === "text" && typeof c.text === "string")
+          .map((c) => c.text)
+          .join("\n");
+      } catch (err) {
+        logger.error("mcp tool call failed", { tool: tool.name, err });
+        throw err;
+      }
     },
     close,
   }));

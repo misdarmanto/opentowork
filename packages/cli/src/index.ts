@@ -19,6 +19,7 @@ import {
   writeStateSnapshot,
   isHumanStep,
   readSettingsFile,
+  createLogger,
   type Connector,
   type Employee,
   type Skill,
@@ -26,6 +27,7 @@ import {
   type ExecutionState,
 } from "@open-work/core";
 
+const logger = createLogger("cli");
 const PROJECT_ROOT = process.cwd();
 const CONFIG_DIR = path.join(PROJECT_ROOT, "config");
 const STATE_DIR = path.join(PROJECT_ROOT, ".open-work");
@@ -246,4 +248,8 @@ program
     }
   });
 
-program.parseAsync();
+program.parseAsync().catch((err) => {
+  logger.error("command failed", { argv: process.argv.slice(2), err });
+  console.error(err instanceof Error ? err.message : String(err));
+  process.exitCode = 1;
+});
