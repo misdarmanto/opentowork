@@ -6,6 +6,7 @@ import {
   buildEmployeeFromForm,
   buildSkillFromForm,
   buildWorkflowFromForm,
+  deleteEmployee,
   getWorkflow,
   listConnectors,
   listEmployees,
@@ -144,6 +145,49 @@ describe("employee/connector/skill builders", () => {
     });
     saveEmployee(employee, yamlText);
     expect(() => saveEmployee(employee, yamlText)).toThrow(/already exists/);
+  });
+
+  it("saveEmployee overwrites when explicitly told to - the path the employee edit modal uses", () => {
+    const { employee, yamlText } = buildEmployeeFromForm({
+      name: TEST_EMPLOYEE,
+      role: "Researcher",
+      provider: "anthropic",
+      model: "claude-sonnet-4",
+    });
+    saveEmployee(employee, yamlText);
+
+    const { employee: updated, yamlText: updatedYaml } = buildEmployeeFromForm({
+      name: TEST_EMPLOYEE,
+      role: "Senior Researcher",
+      provider: "anthropic",
+      model: "claude-sonnet-4",
+    });
+    expect(() => saveEmployee(updated, updatedYaml, { overwrite: true })).not.toThrow();
+
+    const saved = listEmployees().find((e) => e.name === TEST_EMPLOYEE);
+    expect(saved?.role).toBe("Senior Researcher");
+  });
+
+  it("deleteEmployee removes a genuinely existing employee file", () => {
+    const { employee, yamlText } = buildEmployeeFromForm({
+      name: TEST_EMPLOYEE,
+      role: "Researcher",
+      provider: "anthropic",
+      model: "claude-sonnet-4",
+    });
+    saveEmployee(employee, yamlText);
+    expect(listEmployees().some((e) => e.name === TEST_EMPLOYEE)).toBe(true);
+
+    deleteEmployee(TEST_EMPLOYEE);
+    expect(listEmployees().some((e) => e.name === TEST_EMPLOYEE)).toBe(false);
+  });
+
+  it("deleteEmployee rejects a path-traversal name instead of deleting outside config/employees", () => {
+    expect(() => deleteEmployee("../../../etc/passwd")).toThrow(/Invalid name/);
+  });
+
+  it("deleteEmployee throws a clear error for a name that doesn't exist", () => {
+    expect(() => deleteEmployee(TEST_EMPLOYEE)).toThrow(/No employee named/);
   });
 
   it("buildConnectorFromForm rejects a path-traversal connector name", () => {

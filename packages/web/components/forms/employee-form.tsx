@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Employee } from "@open-work/core";
 import { api } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -13,23 +15,38 @@ import { Textarea } from "@/components/ui/textarea";
 
 const PROVIDERS = ["anthropic", "openai", "google", "deepseek"] as const;
 
-export function EmployeeForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
+export function EmployeeForm({
+  employee,
+  onCreated,
+  onDeleted,
+  onCancel,
+}: {
+  /** When set, edits this existing employee instead of creating a new one - its name can't be changed here. */
+  employee?: Employee;
+  onCreated: () => void;
+  onDeleted?: () => void;
+  onCancel: () => void;
+}) {
+  const isEditing = employee !== undefined;
   const queryClient = useQueryClient();
   const connectorsQuery = useQuery({ queryKey: ["connectors"], queryFn: api.listConnectors });
   const skillsQuery = useQuery({ queryKey: ["skills"], queryFn: api.listSkills });
 
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [department, setDepartment] = useState("");
-  const [description, setDescription] = useState("");
-  const [systemPrompt, setSystemPrompt] = useState("");
-  const [context, setContext] = useState("");
-  const [provider, setProvider] = useState<(typeof PROVIDERS)[number]>("anthropic");
-  const [model, setModel] = useState("claude-sonnet-4");
-  const [skills, setSkills] = useState<string[]>([]);
-  const [connectors, setConnectors] = useState<string[]>([]);
-  const [successCriteria, setSuccessCriteria] = useState("");
+  const [name, setName] = useState(employee?.name ?? "");
+  const [role, setRole] = useState(employee?.role ?? "");
+  const [department, setDepartment] = useState(employee?.department ?? "");
+  const [description, setDescription] = useState(employee?.description ?? "");
+  const [systemPrompt, setSystemPrompt] = useState(employee?.system_prompt ?? "");
+  const [context, setContext] = useState(employee?.context ?? "");
+  const [provider, setProvider] = useState<(typeof PROVIDERS)[number]>(employee?.provider ?? "anthropic");
+  const [model, setModel] = useState(employee?.model ?? "claude-sonnet-4");
+  const [skills, setSkills] = useState<string[]>(employee?.skills ?? []);
+  const [connectors, setConnectors] = useState<string[]>(
+    employee?.tools.filter((t) => t.type === "connector").map((t) => t.connector) ?? [],
+  );
+  const [successCriteria, setSuccessCriteria] = useState(employee?.success_criteria.join("\n") ?? "");
   const [savedYaml, setSavedYaml] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // A tool this employee's own tools: and a selected skill both resolve to
   // the same name makes loadToolsForEmployee throw at run time (two tools
@@ -43,9 +60,9 @@ export function EmployeeForm({ onCreated, onCancel }: { onCreated: () => void; o
       .map((t) => t.connector),
   );
 
-  const createMutation = useMutation({
-    mutationFn: () =>
-      api.createEmployee({
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      const payload = {
         name,
         role,
         department: department || undefined,
@@ -60,10 +77,20 @@ export function EmployeeForm({ onCreated, onCancel }: { onCreated: () => void; o
           .split("\n")
           .map((s) => s.trim())
           .filter(Boolean),
-      }),
+      };
+      return isEditing ? api.updateEmployee(employee.name, payload) : api.createEmployee(payload);
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       setSavedYaml(data.yamlText);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.deleteEmployee(employee!.name),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+      onDeleted?.();
     },
   });
 
@@ -78,8 +105,16 @@ export function EmployeeForm({ onCreated, onCancel }: { onCreated: () => void; o
       <div className="flex flex-col gap-4">
         <Alert>
           <AlertDescription>
-            Saved to <code className="font-mono">config/employees/{name}.yaml</code>. Use{" "}
-            <code className="font-mono">{name}</code> as a step's employee in any workflow.
+            {isEditing ? (
+              <>
+                Saved changes to <code className="font-mono">config/employees/{name}.yaml</code>.
+              </>
+            ) : (
+              <>
+                Saved to <code className="font-mono">config/employees/{name}.yaml</code>. Use{" "}
+                <code className="font-mono">{name}</code> as a step's employee in any workflow.
+              </>
+            )}
           </AlertDescription>
         </Alert>
         <pre className="max-h-64 overflow-auto rounded-md bg-muted p-4 font-mono text-xs">{savedYaml}</pre>
@@ -100,6 +135,7 @@ export function EmployeeForm({ onCreated, onCancel }: { onCreated: () => void; o
             value={name}
             onChange={(e) => setName(e.target.value.trim().replace(/\s+/g, "-"))}
             placeholder="content-researcher"
+            disabled={isEditing}
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -219,19 +255,40 @@ export function EmployeeForm({ onCreated, onCancel }: { onCreated: () => void; o
         />
       </div>
 
-      {createMutation.isError && (
+      {(saveMutation.isError || deleteMutation.isError) && (
         <Alert variant="destructive">
-          <AlertDescription>{(createMutation.error as Error).message}</AlertDescription>
+          <AlertDescription>{((saveMutation.error ?? deleteMutation.error) as Error).message}</AlertDescription>
         </Alert>
       )}
 
       <DialogFooter>
-        <Button variant="outline" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button disabled={!canSubmit || createMutation.isPending} onClick={() => createMutation.mutate()}>
-          {createMutation.isPending ? "Saving…" : "Generate & save YAML"}
-        </Button>
+        {isEditing &&
+          (confirmingDelete ? (
+            <>
+              <span className="mr-auto self-center text-sm text-muted-foreground">Delete this employee?</span>
+              <Button variant="outline" onClick={() => setConfirmingDelete(false)}>
+                Never mind
+              </Button>
+              <Button variant="destructive" disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate()}>
+                <Trash2 className="size-4" />
+                {deleteMutation.isPending ? "Deleting…" : "Confirm delete"}
+              </Button>
+            </>
+          ) : (
+            <Button variant="destructive" className="mr-auto" onClick={() => setConfirmingDelete(true)}>
+              <Trash2 className="size-4" /> Delete
+            </Button>
+          ))}
+        {!confirmingDelete && (
+          <>
+            <Button variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            <Button disabled={!canSubmit || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+              {saveMutation.isPending ? "Saving…" : isEditing ? "Save changes" : "Generate & save YAML"}
+            </Button>
+          </>
+        )}
       </DialogFooter>
     </div>
   );

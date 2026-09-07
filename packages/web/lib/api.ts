@@ -98,6 +98,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  updateEmployee: (name: string, input: unknown) =>
+    request<{ employee: Employee; yamlText: string }>(`/api/employees/${encodeURIComponent(name)}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }),
+  deleteEmployee: (name: string) =>
+    request<{ ok: true }>(`/api/employees/${encodeURIComponent(name)}`, { method: "DELETE" }),
   getSettings: () => request<SettingsView>("/api/settings"),
   setApiKey: (provider: Provider, apiKey: string) =>
     request<SettingsView>("/api/settings", { method: "POST", body: JSON.stringify({ action: "setApiKey", provider, apiKey }) }),

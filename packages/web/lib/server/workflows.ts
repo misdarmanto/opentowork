@@ -224,6 +224,22 @@ export function saveEmployee(employee: Employee, yamlText: string, options: { ov
   saveNamedYaml("employees", employee.name, yamlText, parseEmployee, options);
 }
 
+/**
+ * Deletes config/employees/<name>.yaml. Doesn't check whether any workflow
+ * step still references this employee - same "config is hand-edited, the
+ * developer's responsibility" stance as everywhere else the UI writes YAML.
+ * A workflow left pointing at a deleted employee will fail loudly with a
+ * clear "no such file" error the next time it runs, not silently.
+ */
+export function deleteEmployee(name: string): void {
+  assertSafeFileName(name);
+  const filePath = path.join(CONFIG_DIR, "employees", `${name}.yaml`);
+  if (!fs.existsSync(filePath)) {
+    throw new Error(`No employee named "${name}" exists.`);
+  }
+  fs.rmSync(filePath);
+}
+
 export interface ConnectorFormInput {
   name: string;
   type: "mcp" | "custom";
