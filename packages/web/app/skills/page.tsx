@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SkillForm } from "@/components/forms/skill-form";
@@ -52,29 +52,32 @@ export default function SkillsPage() {
       </Dialog>
 
       {skillsQuery.isLoading ? (
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-24 w-full" />
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <Card className="gap-0 divide-y divide-border overflow-hidden py-0">
           {skillsQuery.data?.skills.map((s) => (
-            <Card key={s.name}>
-              <CardHeader className="gap-2">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-medium">{s.name}</h2>
-                  {s.tools.length > 0 && <Badge variant="secondary">{s.tools.length} tool(s)</Badge>}
-                </div>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">{s.instructions}</p>
-              </CardHeader>
-            </Card>
+            <div key={s.name} className="flex items-center gap-3 px-4 py-3">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                <Sparkles className="size-4" />
+              </span>
+              <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                <span className="shrink-0 font-medium">{s.name}</span>
+                <span className="truncate text-sm text-muted-foreground">{s.instructions}</span>
+              </div>
+              {s.tools.length > 0 && (
+                <Badge variant="secondary" className="shrink-0">
+                  {s.tools.length} tool{s.tools.length === 1 ? "" : "s"}
+                </Badge>
+              )}
+            </div>
           ))}
           {skillsQuery.data?.skills.length === 0 && (
-            <Card>
-              <CardContent className="py-8 text-center text-sm text-muted-foreground">No skills yet.</CardContent>
-            </Card>
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">No skills yet.</CardContent>
           )}
-        </div>
+        </Card>
       )}
     </div>
   );
