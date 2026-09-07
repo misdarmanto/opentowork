@@ -5,6 +5,7 @@ import type { ProviderFactory } from "../providers/factory.js";
 import type { ContentBlock, MessageParam } from "../providers/types.js";
 import type { RunStore } from "../store/index.js";
 import { closeTools, loadToolsForEmployee } from "../tools/registry.js";
+import { buildSystemPrompt } from "./system-prompt.js";
 
 export interface Tracer {
   log(entry: Record<string, unknown>): void;
@@ -242,6 +243,7 @@ export class WorkflowExecutor {
     const tools = await loadToolsForEmployee(employee, this.projectRoot);
     const toolByName = new Map(tools.map((t) => [t.name, t]));
     const toolSchemas = tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
+    const system = buildSystemPrompt(employee);
 
     try {
       const messages: MessageParam[] = [{ role: "user", content: objective }];
@@ -259,6 +261,7 @@ export class WorkflowExecutor {
             maxTokens: employee.model_config?.max_tokens,
           },
           toolSchemas.length ? toolSchemas : undefined,
+          system,
         );
 
         totalInput += response.usage.inputTokens;

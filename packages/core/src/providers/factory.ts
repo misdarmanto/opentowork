@@ -26,9 +26,10 @@ export class ProviderFactory {
     messages: MessageParam[],
     modelConfig: ModelConfig,
     tools?: ToolSchema[],
+    system?: string,
   ): Promise<LLMResponse> {
     const provider = await this.get(providerName);
-    return provider.call(messages, modelConfig, tools);
+    return provider.call(messages, modelConfig, tools, system);
   }
 
   calculateCost(providerName: string, inputTokens: number, outputTokens: number, model: string): number {

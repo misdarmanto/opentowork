@@ -57,6 +57,7 @@ export interface LLMProvider {
     messages: MessageParam[],
     modelConfig: ModelConfig,
     tools?: ToolSchema[],
+    system?: string,
   ): Promise<LLMResponse>;
   calculateCost(inputTokens: number, outputTokens: number, model: string): number;
   getModelInfo(model: string): ModelInfo;

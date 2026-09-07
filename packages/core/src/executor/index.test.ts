@@ -83,6 +83,58 @@ describe("WorkflowExecutor", () => {
     expect(store.getRun(state.runId)?.status).toBe("completed");
   });
 
+  it("builds and forwards a real system prompt from the employee's persona fields", async () => {
+    const workflow: Workflow = {
+      name: "single-step",
+      trigger: "manual",
+      steps: [
+        {
+          name: "research",
+          employee: "content-researcher",
+          handoff: { objective: "Research {{topic}}", constraints: [] },
+        },
+      ],
+    };
+
+    let seenSystem: string | undefined;
+    const providers = {
+      call: async (
+        _provider: string,
+        _messages: unknown,
+        _modelConfig: unknown,
+        _tools: unknown,
+        system?: string,
+      ) => {
+        seenSystem = system;
+        return {
+          id: "fake",
+          content: [{ type: "text" as const, text: "brief" }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 1, outputTokens: 1 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(
+      providers,
+      store,
+      async () =>
+        fakeEmployee({
+          department: "Content",
+          system_prompt: "Always cite your sources.",
+          success_criteria: ["cites 5 sources"],
+        }),
+      { log: () => {} },
+    );
+
+    await executor.run(workflow);
+
+    expect(seenSystem).toContain("You are content-researcher, a Researcher in the Content department.");
+    expect(seenSystem).toContain("Always cite your sources.");
+    expect(seenSystem).toContain("- cites 5 sources");
+  });
+
   it("passes a prior step's output into the next step's context via depends_on", async () => {
     const workflow: Workflow = {
       name: "two-step",

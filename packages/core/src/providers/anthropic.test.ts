@@ -85,6 +85,25 @@ describe("AnthropicProvider.call", () => {
       }),
     );
   });
+
+  it("forwards the system prompt to the SDK call", async () => {
+    const { provider, create } = await providerWithMockedCreate({ ...baseResponse, stop_reason: "end_turn" });
+    await provider.call(
+      [{ role: "user", content: "hi" }],
+      { model: "claude-sonnet-4" },
+      undefined,
+      "You are a helpful researcher.",
+    );
+
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ system: "You are a helpful researcher." }));
+  });
+
+  it("omits the system field (undefined) when no employee system prompt is built", async () => {
+    const { provider, create } = await providerWithMockedCreate({ ...baseResponse, stop_reason: "end_turn" });
+    await provider.call([{ role: "user", content: "hi" }], { model: "claude-sonnet-4" });
+
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ system: undefined }));
+  });
 });
 
 describe("AnthropicProvider.calculateCost", () => {
