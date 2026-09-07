@@ -102,7 +102,7 @@ export default function WorkflowsPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-4xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Build a new workflow</DialogTitle>
             <DialogDescription>

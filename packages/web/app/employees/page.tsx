@@ -37,7 +37,7 @@ export default function EmployeesPage() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-4xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Build a new employee</DialogTitle>
             <DialogDescription>
