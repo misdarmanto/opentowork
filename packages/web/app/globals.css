@@ -49,6 +49,14 @@
 }
 
 :root {
+  /*
+   * claude.ai's own font stack, minus "anthropic-sans" - that's Anthropic's
+   * unpublished proprietary font, not something a separate open-source
+   * project can legally ship. This is exactly what claude.ai itself falls
+   * back to on a machine without it: the OS's native UI font.
+   */
+  --font-sans: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -126,6 +134,6 @@
   }
   html {
     @apply font-sans;
-    font-size: 17px;
+    font-size: 18px;
   }
 }
