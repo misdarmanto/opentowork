@@ -45,7 +45,7 @@ export default function ConnectorsPage() {
               A named, reusable MCP server or custom tool - attach it to as many employees as you like.
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto overflow-x-hidden pr-2">
+          <div className="max-h-[50vh] overflow-y-auto overflow-x-hidden pr-2">
             <ConnectorForm
               key={formKey}
               onCreated={() => setDialogOpen(false)}
