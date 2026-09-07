@@ -8,9 +8,11 @@ import {
   combineTracers,
   createFileTracer,
   isHumanStep,
+  parseConnector,
   parseEmployee,
   writeArtifacts,
   writeStateSnapshot,
+  type Connector,
   type Employee,
   type ExecutionState,
   type Workflow,
@@ -18,9 +20,26 @@ import {
 import { CONFIG_DIR, PROJECT_ROOT, RUNS_DIR } from "./paths";
 import { getStore } from "./store";
 
+// Employee/connector names become filenames on disk — same path-traversal
+// concern assertSafeFileName in ./workflows.ts guards against for workflow names.
+const SAFE_NAME = /^[a-z0-9][a-z0-9_-]*$/i;
+
+function assertSafeFileName(name: string): void {
+  if (!SAFE_NAME.test(name)) {
+    throw new Error(`Invalid name "${name}" — use only letters, numbers, hyphens, and underscores`);
+  }
+}
+
 async function loadEmployee(name: string): Promise<Employee> {
+  assertSafeFileName(name);
   const filePath = path.join(CONFIG_DIR, "employees", `${name}.yaml`);
   return parseEmployee(parseYAML(fs.readFileSync(filePath, "utf-8")));
+}
+
+async function loadConnector(name: string): Promise<Connector> {
+  assertSafeFileName(name);
+  const filePath = path.join(CONFIG_DIR, "connectors", `${name}.yaml`);
+  return parseConnector(parseYAML(fs.readFileSync(filePath, "utf-8")));
 }
 
 function buildProviderFactory(): ProviderFactory {
@@ -43,7 +62,7 @@ function buildExecutor(runId: string): WorkflowExecutor {
     { log: (e) => console.log(JSON.stringify(e)) },
     createFileTracer(RUNS_DIR, runId),
   );
-  return new WorkflowExecutor(providers, getStore(), loadEmployee, tracer, PROJECT_ROOT);
+  return new WorkflowExecutor(providers, getStore(), loadEmployee, tracer, PROJECT_ROOT, loadConnector);
 }
 
 function deliverablesOf(workflow: Workflow): Map<string, string> {

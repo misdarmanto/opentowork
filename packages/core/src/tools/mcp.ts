@@ -1,6 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import type { ToolConfig } from "../schema/employee.js";
+import type { ToolConfig } from "../schema/tool.js";
 import type { LoadedTool } from "./types.js";
 
 type McpToolConfig = Extract<ToolConfig, { type: "mcp" }>;

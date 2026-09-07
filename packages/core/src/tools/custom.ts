@@ -1,6 +1,6 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import type { ToolConfig } from "../schema/employee.js";
+import type { ToolConfig } from "../schema/tool.js";
 import type { LoadedTool } from "./types.js";
 
 type CustomToolConfig = Extract<ToolConfig, { type: "custom" }>;

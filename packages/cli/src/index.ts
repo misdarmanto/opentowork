@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parse as parseYAML } from "yaml";
 import {
+  parseConnector,
   parseEmployee,
   parseWorkflow,
   ProviderFactory,
@@ -16,6 +17,7 @@ import {
   writeArtifacts,
   writeStateSnapshot,
   isHumanStep,
+  type Connector,
   type Employee,
   type Workflow,
   type ExecutionState,
@@ -36,10 +38,30 @@ function loadWorkflowFile(name: string): Workflow {
   return parseWorkflow(raw);
 }
 
+// Employee/connector names become filenames on disk (config/employees/<name>.yaml,
+// config/connectors/<name>.yaml). Without this, a name like "../../evil" read from
+// workflow/employee YAML would read outside those directories entirely — same
+// concern as packages/web/lib/server/workflows.ts's assertSafeFileName.
+const SAFE_NAME = /^[a-z0-9][a-z0-9_-]*$/i;
+
+function assertSafeFileName(name: string): void {
+  if (!SAFE_NAME.test(name)) {
+    throw new Error(`Invalid name "${name}" — use only letters, numbers, hyphens, and underscores`);
+  }
+}
+
 async function loadEmployee(name: string): Promise<Employee> {
+  assertSafeFileName(name);
   const filePath = path.join(CONFIG_DIR, "employees", `${name}.yaml`);
   const raw = parseYAML(fs.readFileSync(filePath, "utf-8"));
   return parseEmployee(raw);
+}
+
+async function loadConnector(name: string): Promise<Connector> {
+  assertSafeFileName(name);
+  const filePath = path.join(CONFIG_DIR, "connectors", `${name}.yaml`);
+  const raw = parseYAML(fs.readFileSync(filePath, "utf-8"));
+  return parseConnector(raw);
 }
 
 function buildProviderFactory(): ProviderFactory {
@@ -61,7 +83,7 @@ function buildProviderFactory(): ProviderFactory {
 function buildExecutor(store: RunStore, runId: string): WorkflowExecutor {
   const providers = buildProviderFactory();
   const tracer = combineTracers({ log: (e) => console.log(JSON.stringify(e)) }, createFileTracer(RUNS_DIR, runId));
-  return new WorkflowExecutor(providers, store, loadEmployee, tracer, PROJECT_ROOT);
+  return new WorkflowExecutor(providers, store, loadEmployee, tracer, PROJECT_ROOT, loadConnector);
 }
 
 /** step name -> deliverable filename, for every agent step that declares one. */

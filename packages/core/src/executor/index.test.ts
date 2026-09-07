@@ -315,6 +315,64 @@ describe("WorkflowExecutor", () => {
     expect(state.status).toBe("completed");
     expect(state.stepOutputs.get("research")).toBe("done");
   });
+
+  it("resolves a {type: connector} tool reference end-to-end via the executor's loadConnector param", async () => {
+    const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "tools", "__fixtures__");
+
+    const workflow: Workflow = {
+      name: "with-connector",
+      trigger: "manual",
+      steps: [
+        {
+          name: "research",
+          employee: "content-researcher",
+          handoff: { objective: "Echo something", constraints: [] },
+        },
+      ],
+    };
+
+    let call = 0;
+    let connectorLookups = 0;
+    const toolCallingProvider = {
+      call: async () => {
+        call++;
+        if (call === 1) {
+          return {
+            id: "fake-1",
+            content: [{ type: "tool_use" as const, id: "tool-1", name: "echo", input: { text: "hi" } }],
+            stopReason: "tool_use" as const,
+            usage: { inputTokens: 5, outputTokens: 5 },
+          };
+        }
+        return {
+          id: "fake-2",
+          content: [{ type: "text" as const, text: "done via connector" }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 5, outputTokens: 5 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(
+      toolCallingProvider,
+      store,
+      async () => fakeEmployee({ tools: [{ type: "connector", connector: "shared-echo" }] }),
+      { log: () => {} },
+      fixturesDir,
+      async (name) => {
+        connectorLookups++;
+        expect(name).toBe("shared-echo");
+        return { type: "custom", name: "echo", path: "echo-custom-tool.mjs" };
+      },
+    );
+
+    const state = await executor.run(workflow);
+
+    expect(connectorLookups).toBe(1);
+    expect(state.status).toBe("completed");
+    expect(state.stepOutputs.get("research")).toBe("done via connector");
+  });
 });
 
 describe("WorkflowExecutor.approve / reject / resume", () => {

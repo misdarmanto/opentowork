@@ -1,28 +1,5 @@
 import { z } from "zod";
-
-const toolConfigSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("mcp"),
-    name: z.string(),
-    // stdio transport (most real MCP servers, e.g. `npx @modelcontextprotocol/server-brave-search`)
-    command: z.string().optional(),
-    args: z.array(z.string()).default([]),
-    // streamable-http transport, for servers exposed over HTTP instead
-    endpoint: z.string().optional(),
-    credentials_from: z.string().optional(),
-  }),
-  z.object({
-    type: z.literal("custom"),
-    name: z.string(),
-    path: z.string(),
-    timeout: z.number().optional(),
-  }),
-  z.object({
-    type: z.literal("builtin"),
-    name: z.string(),
-    context: z.string().optional(),
-  }),
-]);
+import { toolConfigSchema } from "./tool.js";
 
 export const employeeSchema = z.object({
   name: z.string(),
@@ -66,7 +43,6 @@ export const employeeSchema = z.object({
 });
 
 export type Employee = z.infer<typeof employeeSchema>;
-export type ToolConfig = z.infer<typeof toolConfigSchema>;
 
 export function parseEmployee(raw: unknown): Employee {
   return employeeSchema.parse(raw);

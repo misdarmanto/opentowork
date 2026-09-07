@@ -4,7 +4,7 @@ import { isHumanStep, type Workflow, type WorkflowStep } from "../schema/workflo
 import type { ProviderFactory } from "../providers/factory.js";
 import type { ContentBlock, MessageParam } from "../providers/types.js";
 import type { RunStore } from "../store/index.js";
-import { closeTools, loadToolsForEmployee } from "../tools/registry.js";
+import { closeTools, loadToolsForEmployee, type ConnectorLoader } from "../tools/registry.js";
 import { buildSystemPrompt } from "./system-prompt.js";
 
 export interface Tracer {
@@ -33,6 +33,8 @@ export class WorkflowExecutor {
     private readonly tracer: Tracer,
     /** Base directory custom tool `path` entries resolve against (usually the project root, where `config/` lives). */
     private readonly projectRoot: string = process.cwd(),
+    /** Resolves a `{type: connector, connector: <name>}` tool reference. Optional — omitting it is fine as long as no employee actually uses one. */
+    private readonly loadConnector?: ConnectorLoader,
   ) {}
 
   /**
@@ -240,7 +242,7 @@ export class WorkflowExecutor {
     runId: string,
     stepName: string,
   ): Promise<{ artifact: string; inputTokens: number; outputTokens: number; cost: number }> {
-    const tools = await loadToolsForEmployee(employee, this.projectRoot);
+    const tools = await loadToolsForEmployee(employee, this.projectRoot, this.loadConnector);
     const toolByName = new Map(tools.map((t) => [t.name, t]));
     const toolSchemas = tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
     const system = buildSystemPrompt(employee);

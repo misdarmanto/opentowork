@@ -281,6 +281,48 @@ claim is fully verified rather than just configured correctly.
 
 ---
 
+## Phase 6 — Skills and connectors (user-authored AI employees)
+
+Requested addition: let users define their own reusable skills and tool
+connectors, and compose them (plus system prompt + context) into custom
+employees — then chain those custom employees into workflows exactly like
+built-in ones. Explicitly **not** free-form agent-to-agent negotiation; the
+human still defines the step order (`WorkflowExecutor`/"Human as CEO" is
+unchanged) — this phase is about who can *author* an employee, not who
+decides the run order.
+
+1. [x] Foundation: `Employee.system_prompt` / `Employee.context` fields and
+   a real `buildSystemPrompt()` wired into every LLM call — previously the
+   system prompt concept didn't exist at all, so every employee's
+   `role`/`description`/`success_criteria` were pure decoration.
+   (`packages/core/src/executor/system-prompt.ts`)
+2. [x] Connectors — reusable, named tool configs (`config/connectors/*.yaml`,
+   `mcp` or `custom` only) referenced from employee YAML via
+   `{type: connector, connector: <name>}` instead of inlining the same MCP/
+   custom config in every employee that needs it. Resolved through an
+   injected `ConnectorLoader` (the same "seam" pattern as `EmployeeLoader`)
+   so `packages/core` still owns zero file paths. `content-researcher` and
+   `content-researcher-deepseek` migrated to share one `duckduckgo`
+   connector as the first real usage.
+   (`packages/core/src/schema/connector.ts`, `packages/core/src/tools/registry.ts`)
+3. [ ] Skills — reusable capability packages (`config/skills/*.yaml`):
+   instructions text + a set of tools/connectors, referenced from employee
+   YAML's existing `skills:` list (today that list is declared but never
+   actually loaded or used by the executor). Should append into
+   `buildSystemPrompt`'s `extraInstructions` param, added in step 1
+   specifically to make this composable without another refactor.
+4. [ ] Web UI: connector management (list/create/edit `config/connectors/*.yaml`
+   through the builder), skill management, and an employee builder page
+   (`/employees/new` — currently missing entirely; the web UI can build
+   workflows but has no form for authoring an employee YAML).
+
+**Done when:** a user can create a connector and a skill through the web UI
+with no hand-written YAML, attach both to a new employee built the same way,
+and chain that employee into an existing workflow — end to end, verified
+with a real run (not just a passing build).
+
+---
+
 ## Explicit non-goals for "done"
 
 Do not add these while chasing "done" — they're v1.1+ per `CLAUDE.md` and

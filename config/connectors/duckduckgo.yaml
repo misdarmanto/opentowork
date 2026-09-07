@@ -1,0 +1,4 @@
+type: mcp
+name: duckduckgo
+command: npx
+args: ["-y", "duckduckgo-mcp-server"]

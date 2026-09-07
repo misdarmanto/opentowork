@@ -1,5 +1,7 @@
 export * from "./schema/employee.js";
 export * from "./schema/workflow.js";
+export * from "./schema/tool.js";
+export * from "./schema/connector.js";
 export * from "./providers/types.js";
 export * from "./providers/factory.js";
 export * from "./providers/anthropic.js";
