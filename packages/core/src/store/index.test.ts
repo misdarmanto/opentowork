@@ -76,7 +76,7 @@ describe("RunStore", () => {
   });
 
   it("tracks an approval from pending to rejected", () => {
-    // The rejected path is what Phase 1's resubmit-to-step gate depends on —
+    // The rejected path is what Phase 1's resubmit-to-step gate depends on -
     // worth its own case, not just lumped in with "approved".
     store.createRun({ id: "run-1", workflowName: "research-and-script" });
     store.createApproval({ id: "approval-1", runId: "run-1", stepName: "review" });
@@ -112,7 +112,7 @@ describe("RunStore", () => {
     store.recordStep({ id: "step-1", runId: "run-1", stepName: "write-script", status: "completed", output: "draft 1" });
     store.supersedeCompletedSteps("run-1", "write-script");
     // Recorded immediately after, almost certainly within the same second
-    // as step-1 — this is exactly the resubmit-retry scenario.
+    // as step-1 - this is exactly the resubmit-retry scenario.
     store.recordStep({ id: "step-2", runId: "run-1", stepName: "write-script", status: "completed", output: "draft 2" });
 
     const latest = store.getLatestStepsByName("run-1").get("write-script");

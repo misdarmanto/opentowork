@@ -36,7 +36,7 @@ const SAFE_NAME = /^[a-z0-9][a-z0-9_-]*$/i;
 function assertSafeFileName(name: string): void {
   if (!SAFE_NAME.test(name)) {
     throw new Error(
-      `Invalid name "${name}" — use only letters, numbers, hyphens, and underscores`,
+      `Invalid name "${name}" - use only letters, numbers, hyphens, and underscores`,
     );
   }
 }
@@ -63,7 +63,7 @@ export function listSkills(): Skill[] {
 /**
  * Writes `yamlText` to `<CONFIG_DIR>/<subdir>/<name>.yaml`, refusing to
  * silently overwrite a hand-written file. `validate` is called on the
- * parsed YAML immediately before the write — same "never save something
+ * parsed YAML immediately before the write - same "never save something
  * open-work run can't load" invariant as saveWorkflow.
  */
 function saveNamedYaml(
@@ -91,12 +91,12 @@ export function saveWorkflow(workflow: Workflow, yamlText: string, options: { ov
   const filePath = path.join(dir, `${workflow.name}.yaml`);
 
   // A developer's hand-written, git-committed YAML is the source of truth
-  // (CLAUDE.md) — the builder UI must never silently clobber it.
+  // (CLAUDE.md) - the builder UI must never silently clobber it.
   if (!options.overwrite && fs.existsSync(filePath)) {
     throw new Error(`A workflow named "${workflow.name}" already exists. Choose a different name.`);
   }
 
-  // Validate before writing — never save something open-work run can't load.
+  // Validate before writing - never save something open-work run can't load.
   parseWorkflow(parseYAML(yamlText));
   fs.writeFileSync(filePath, yamlText);
 }
@@ -120,7 +120,7 @@ export interface WorkflowFormInput {
 
 /**
  * Turns the form builder's picks into the exact same YAML shape a developer
- * would hand-write (see the `architecture` skill's workflow reference) —
+ * would hand-write (see the `architecture` skill's workflow reference) -
  * the UI is a generator for that file, never a separate format (CLAUDE.md's
  * dual-interface decision).
  */
@@ -130,7 +130,7 @@ export function buildWorkflowFromForm(input: WorkflowFormInput): { workflow: Wor
   if (input.steps.length === 0) throw new Error("At least one step is required");
   for (const step of input.steps) {
     // step.employee ends up read as config/employees/<employee>.yaml
-    // (see lib/server/executor.ts's loadEmployee) — same path-traversal
+    // (see lib/server/executor.ts's loadEmployee) - same path-traversal
     // concern as the workflow name itself.
     assertSafeFileName(step.employee);
   }
@@ -186,7 +186,7 @@ export interface EmployeeFormInput {
 
 /**
  * Turns the employee builder form into the same YAML shape a developer
- * would hand-write — same dual-interface decision as buildWorkflowFromForm.
+ * would hand-write - same dual-interface decision as buildWorkflowFromForm.
  * Deliberately doesn't expose every schema field (model_config/budget/
  * constraints): those default sensibly and are still there to hand-edit
  * once the file exists, same as any other generated YAML.

@@ -49,7 +49,7 @@ export interface ModelInfo {
 
 /**
  * Every LLM vendor is called through this interface only. Adding a new
- * provider means implementing this — nothing else in the executor changes.
+ * provider means implementing this - nothing else in the executor changes.
  */
 export interface LLMProvider {
   initialize(config: ProviderConfig): Promise<void>;

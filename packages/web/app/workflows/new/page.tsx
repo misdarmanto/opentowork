@@ -71,7 +71,7 @@ export default function NewWorkflowPage() {
         <Alert>
           <AlertDescription>
             Saved to <code className="font-mono">config/workflows/{name}.yaml</code>. This is a
-            real file — open it in your editor, commit it to git, or edit it by hand any time.
+            real file - open it in your editor, commit it to git, or edit it by hand any time.
           </AlertDescription>
         </Alert>
         <Card>

@@ -9,7 +9,7 @@ following the shape documented in the `architecture` skill under "Employee
 YAML shape".
 
 Ask the user (if not already clear from context) for: role, department,
-provider/model, skills, tools needed, and success criteria — don't invent
+provider/model, skills, tools needed, and success criteria - don't invent
 business-specific details silently. Keep `tools: []` if none are specified
 rather than guessing an integration.
 

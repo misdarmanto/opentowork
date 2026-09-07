@@ -33,15 +33,15 @@ export class WorkflowExecutor {
     private readonly tracer: Tracer,
     /** Base directory custom tool `path` entries resolve against (usually the project root, where `config/` lives). */
     private readonly projectRoot: string = process.cwd(),
-    /** Resolves a `{type: connector, connector: <name>}` tool reference. Optional — omitting it is fine as long as no employee actually uses one. */
+    /** Resolves a `{type: connector, connector: <name>}` tool reference. Optional - omitting it is fine as long as no employee actually uses one. */
     private readonly loadConnector?: ConnectorLoader,
-    /** Resolves a name in an employee's `skills:` list. Optional — omitting it is fine as long as no employee actually lists one. */
+    /** Resolves a name in an employee's `skills:` list. Optional - omitting it is fine as long as no employee actually lists one. */
     private readonly loadSkill?: SkillLoader,
   ) {}
 
   /**
    * `runId` can be supplied by the caller (e.g. so a CLI can create a
-   * run-scoped file tracer before any step executes) — it otherwise
+   * run-scoped file tracer before any step executes) - it otherwise
    * generates one itself.
    */
   async run(workflow: Workflow, params: Record<string, string> = {}, runId: string = randomUUID()): Promise<ExecutionState> {
@@ -61,8 +61,8 @@ export class WorkflowExecutor {
   /**
    * Continues a run that's still "running" in the DB (process died
    * mid-step) or "awaiting_approval" with no decision made yet. Rebuilds
-   * state entirely from RunStore — SQLite is the durable checkpoint, not
-   * any in-memory object — and resumes at the first step that isn't done.
+   * state entirely from RunStore - SQLite is the durable checkpoint, not
+   * any in-memory object - and resumes at the first step that isn't done.
    */
   async resume(runId: string, workflow: Workflow): Promise<ExecutionState> {
     const state = this.rehydrate(runId, workflow);
@@ -71,7 +71,7 @@ export class WorkflowExecutor {
     // rehydrate() reports the DB's pre-decision status (checked above); once
     // we've decided there's actually work to (re-)drive forward, the state
     // machine's own "running" is what governs executeFrom/executeStep from
-    // here — leaving the stale "awaiting_approval" in place would make
+    // here - leaving the stale "awaiting_approval" in place would make
     // executeFrom think a still-pending human step it hasn't even reached
     // yet is the one it just paused on, and return immediately.
     state.status = "running";
@@ -140,7 +140,7 @@ export class WorkflowExecutor {
     return state;
   }
 
-  /** Rebuilds an ExecutionState purely from what's durably stored — never from memory. */
+  /** Rebuilds an ExecutionState purely from what's durably stored - never from memory. */
   private rehydrate(runId: string, workflow: Workflow): ExecutionState {
     const run = this.store.getRun(runId);
     if (!run) throw new Error(`No run found with id "${runId}"`);
@@ -329,7 +329,7 @@ export class WorkflowExecutor {
         }
 
         // Any other stop reason (e.g. max_tokens) is a hard failure rather
-        // than a silent partial result — see CLAUDE.md's "don't claim
+        // than a silent partial result - see CLAUDE.md's "don't claim
         // something works" rule applied to the agent's own output.
         throw new Error(`Unhandled stop reason "${response.stopReason}" for employee "${employee.name}"`);
       }

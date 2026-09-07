@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * Shared by employee.ts (inline tool configs) and connector.ts (a named,
  * reusable tool config saved to its own config/connectors/<name>.yaml file)
- * — a connector's *content* is exactly one of these two shapes; only the
+ * - a connector's *content* is exactly one of these two shapes; only the
  * employee-facing union adds "builtin" and "connector" (a reference to one
  * of these files by name).
  */
@@ -33,7 +33,7 @@ const builtinToolSchema = z.object({
 
 const connectorRefSchema = z.object({
   type: z.literal("connector"),
-  /** Name of a config/connectors/<connector>.yaml file — resolved at load time. */
+  /** Name of a config/connectors/<connector>.yaml file - resolved at load time. */
   connector: z.string(),
 });
 

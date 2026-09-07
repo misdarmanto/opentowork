@@ -19,7 +19,7 @@ export default function ConnectorsPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Connectors</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Reusable tool configs in{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">config/connectors/*.yaml</code> — attach one to
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">config/connectors/*.yaml</code> - attach one to
             any employee by name instead of repeating the MCP/custom setup.
           </p>
         </div>

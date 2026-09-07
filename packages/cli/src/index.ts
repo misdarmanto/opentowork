@@ -43,12 +43,12 @@ function loadWorkflowFile(name: string): Workflow {
 // Employee/connector/skill names become filenames on disk (config/employees/<name>.yaml,
 // config/connectors/<name>.yaml, config/skills/<name>.yaml). Without this, a name like
 // "../../evil" read from workflow/employee YAML would read outside those directories
-// entirely — same concern as packages/web/lib/server/workflows.ts's assertSafeFileName.
+// entirely - same concern as packages/web/lib/server/workflows.ts's assertSafeFileName.
 const SAFE_NAME = /^[a-z0-9][a-z0-9_-]*$/i;
 
 function assertSafeFileName(name: string): void {
   if (!SAFE_NAME.test(name)) {
-    throw new Error(`Invalid name "${name}" — use only letters, numbers, hyphens, and underscores`);
+    throw new Error(`Invalid name "${name}" - use only letters, numbers, hyphens, and underscores`);
   }
 }
 
@@ -80,7 +80,7 @@ function buildProviderFactory(): ProviderFactory {
   }
   if (process.env.DEEPSEEK_API_KEY) {
     // DeepSeek's API is Anthropic-compatible (https://api-docs.deepseek.com/guides/anthropic_api),
-    // so the same provider class works — only the base URL and key differ.
+    // so the same provider class works - only the base URL and key differ.
     factory.register("deepseek", new AnthropicProvider(), {
       apiKey: process.env.DEEPSEEK_API_KEY,
       baseUrl: "https://api.deepseek.com/anthropic",
@@ -112,7 +112,7 @@ function persistArtifacts(workflow: Workflow, store: RunStore, state: ExecutionS
 }
 
 function report(state: ExecutionState): void {
-  console.log(`\nRun ${state.runId} — status: ${state.status}`);
+  console.log(`\nRun ${state.runId} - status: ${state.status}`);
   if (state.status === "awaiting_approval") {
     console.log(`Waiting on human approval. Use:\n  open-work approve ${state.runId}\n  open-work reject ${state.runId}`);
   }

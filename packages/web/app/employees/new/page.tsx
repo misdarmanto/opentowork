@@ -45,7 +45,7 @@ export default function NewEmployeePage() {
         provider,
         model,
         skills,
-        // Exclude connectors a selected skill already contributes — the UI
+        // Exclude connectors a selected skill already contributes - the UI
         // disables their checkboxes, but this guards against stale state
         // (e.g. a skill checked after its connector was already checked).
         connectors: connectors.filter((c) => !connectorsFromSelectedSkills.has(c)),
@@ -63,7 +63,7 @@ export default function NewEmployeePage() {
 
   // A tool this employee's own tools: and a selected skill both resolve to
   // the same name makes loadToolsForEmployee throw at run time (two tools
-  // can't share a name in one LLM call) — so a connector already pulled in
+  // can't share a name in one LLM call) - so a connector already pulled in
   // by a selected skill can't also be picked directly here.
   const connectorsFromSelectedSkills = new Set(
     (skillsQuery.data?.skills ?? [])
@@ -102,7 +102,7 @@ export default function NewEmployeePage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Build a new employee</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Persona, model, skills and connectors — the same YAML you'd hand-write in{" "}
+          Persona, model, skills and connectors - the same YAML you'd hand-write in{" "}
           <code className="rounded bg-muted px-1 py-0.5 text-xs">config/employees/</code>.
         </p>
       </div>
@@ -176,7 +176,7 @@ export default function NewEmployeePage() {
               rows={3}
               value={context}
               onChange={(e) => setContext(e.target.value)}
-              placeholder="Company style guide, product facts — always included in the system prompt."
+              placeholder="Company style guide, product facts - always included in the system prompt."
             />
           </div>
         </CardContent>

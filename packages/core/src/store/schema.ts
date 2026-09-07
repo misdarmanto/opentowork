@@ -29,7 +29,7 @@ export const steps = sqliteTable("steps", {
   outputTokens: integer("output_tokens").default(0),
   cost: real("cost").default(0),
   output: text("output"),
-  // Ordering for "latest recorded step per stepName" on resume — insertion
+  // Ordering for "latest recorded step per stepName" on resume - insertion
   // order isn't a guarantee SQL makes without an explicit sortable column.
   // Millisecond resolution (not "timestamp"'s seconds) because a resubmit
   // retry can complete its LLM call within the same second as the row it

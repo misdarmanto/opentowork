@@ -22,13 +22,13 @@ import {
 import { CONFIG_DIR, PROJECT_ROOT, RUNS_DIR } from "./paths";
 import { getStore } from "./store";
 
-// Employee/connector/skill names become filenames on disk — same path-traversal
+// Employee/connector/skill names become filenames on disk - same path-traversal
 // concern assertSafeFileName in ./workflows.ts guards against for workflow names.
 const SAFE_NAME = /^[a-z0-9][a-z0-9_-]*$/i;
 
 function assertSafeFileName(name: string): void {
   if (!SAFE_NAME.test(name)) {
-    throw new Error(`Invalid name "${name}" — use only letters, numbers, hyphens, and underscores`);
+    throw new Error(`Invalid name "${name}" - use only letters, numbers, hyphens, and underscores`);
   }
 }
 
@@ -88,7 +88,7 @@ function persistArtifacts(workflow: Workflow, state: ExecutionState): void {
 
 /**
  * These mirror packages/cli/src/index.ts's run/resume/approve/reject
- * commands exactly — same executor, same store, same file layout. The web
+ * commands exactly - same executor, same store, same file layout. The web
  * app is a second *interface*, never a second implementation of what a run
  * does (see CLAUDE.md's dual-interface decision).
  */

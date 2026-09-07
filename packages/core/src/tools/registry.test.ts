@@ -22,7 +22,7 @@ function fakeEmployee(overrides: Partial<Employee> = {}): Employee {
   };
 }
 
-describe("loadToolsForEmployee — connector references", () => {
+describe("loadToolsForEmployee - connector references", () => {
   it("resolves a {type: connector} tool via the injected loader to a real, callable tool", async () => {
     const connector: Connector = { type: "custom", name: "echo", path: "echo-custom-tool.mjs" };
     const tools = await loadToolsForEmployee(
@@ -70,7 +70,7 @@ describe("loadSkillsForEmployee", () => {
   });
 });
 
-describe("loadToolsForEmployee — skill-contributed tools", () => {
+describe("loadToolsForEmployee - skill-contributed tools", () => {
   it("merges a skill's tools alongside the employee's own tools", async () => {
     const skill: Skill = {
       name: "web-research",

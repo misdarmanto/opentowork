@@ -53,7 +53,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </header>
           <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
           <footer className="border-t border-border px-6 py-4 text-center text-xs text-muted-foreground">
-            Open Work — self-hosted, AGPL-3.0
+            Open Work - self-hosted, AGPL-3.0
           </footer>
         </Providers>
       </body>

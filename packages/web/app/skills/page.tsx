@@ -19,7 +19,7 @@ export default function SkillsPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Skills</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Reusable capability packages in{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">config/skills/*.yaml</code> — instructions
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">config/skills/*.yaml</code> - instructions
             appended to an employee's system prompt, plus any tools the skill contributes.
           </p>
         </div>

@@ -18,7 +18,7 @@ export default function EmployeesPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Employees</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Defined in <code className="rounded bg-muted px-1 py-0.5 text-xs">config/employees/*.yaml</code> — pick
+            Defined in <code className="rounded bg-muted px-1 py-0.5 text-xs">config/employees/*.yaml</code> - pick
             a provider/model, attach skills and connectors, use them as steps in any workflow.
           </p>
         </div>

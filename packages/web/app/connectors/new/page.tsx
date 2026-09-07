@@ -62,7 +62,7 @@ export default function NewConnectorPage() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">New connector</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          A named, reusable MCP server or custom tool — attach it to as many employees as you like.
+          A named, reusable MCP server or custom tool - attach it to as many employees as you like.
         </p>
       </div>
 

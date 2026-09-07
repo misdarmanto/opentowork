@@ -8,7 +8,7 @@ export const employeeSchema = z.object({
   description: z.string().optional(),
   /** Free-form persona/instructions, sent as the LLM's system prompt verbatim (in addition to role/description/success_criteria, which are always included). */
   system_prompt: z.string().optional(),
-  /** Reference material always included in the system prompt — company style guide, product facts, etc. */
+  /** Reference material always included in the system prompt - company style guide, product facts, etc. */
   context: z.string().optional(),
 
   provider: z.enum(["anthropic", "openai", "google", "deepseek"]),

@@ -21,7 +21,7 @@ describe("AnthropicProvider.initialize", () => {
 });
 
 /**
- * Mocks the SDK client's messages.create — these tests are about
+ * Mocks the SDK client's messages.create - these tests are about
  * AnthropicProvider's own translation logic (stop-reason mapping, usage
  * pass-through), not about whether the Anthropic API itself works.
  */

@@ -4,7 +4,7 @@ import type { Tracer } from "./index.js";
 import type { RunStore } from "../store/index.js";
 
 /**
- * Appends one JSON line per event to `<runsDir>/<runId>/trace.jsonl` — the
+ * Appends one JSON line per event to `<runsDir>/<runId>/trace.jsonl` - the
  * git-friendly, human-readable audit trail described in the `architecture`
  * skill. SQLite (via RunStore) remains the source of truth resume/approve/
  * reject actually read from; this file is for humans and `git diff`.

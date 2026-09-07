@@ -19,7 +19,7 @@ skills:
 tools:
   # See config/connectors/duckduckgo.yaml for what this actually runs and
   # why (free, no API key, unverified search results in CI/sandboxed
-  # environments — see ROADMAP.md Phase 2). Shared with
+  # environments - see ROADMAP.md Phase 2). Shared with
   # content-researcher-deepseek.yaml so both stay in sync automatically.
   - type: connector
     connector: duckduckgo

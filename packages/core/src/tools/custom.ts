@@ -14,7 +14,7 @@ interface CustomToolDefinition {
 
 /**
  * Loads a user-authored tool module. The module must export
- * `defineCustomTool()` returning { name, description, schema, execute } —
+ * `defineCustomTool()` returning { name, description, schema, execute } -
  * documented in the `architecture` skill's employee YAML reference.
  */
 export async function loadCustomTool(config: CustomToolConfig, projectRoot: string): Promise<LoadedTool> {
@@ -49,7 +49,7 @@ export async function loadCustomTool(config: CustomToolConfig, projectRoot: stri
         return typeof result === "string" ? result : JSON.stringify(result);
       } finally {
         // Without this, every successful (non-timed-out) call leaves its
-        // timer alive for the full timeout window — up to the default 30s —
+        // timer alive for the full timeout window - up to the default 30s -
         // holding the Node process open that whole time.
         clearTimeout(timer!);
       }

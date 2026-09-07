@@ -6,7 +6,7 @@ import * as schema from "./schema.js";
 /**
  * Every read/write to runtime state goes through this class. This is the
  * seam: swapping SQLite for Postgres later means changing the driver used
- * here (drizzle-orm/node-postgres) — callers never touch the DB directly.
+ * here (drizzle-orm/node-postgres) - callers never touch the DB directly.
  */
 export class RunStore {
   private db: BetterSQLite3Database<typeof schema>;
@@ -22,7 +22,7 @@ export class RunStore {
    * Hand-rolled `CREATE TABLE IF NOT EXISTS` instead of drizzle-kit migrations.
    * Fine for the MVP's single, additive schema; move to drizzle-kit migrations
    * before the schema needs its first breaking change. Kept in sync with
-   * schema.ts by store/schema-drift.test.ts — update both together.
+   * schema.ts by store/schema-drift.test.ts - update both together.
    */
   private migrate(sqlite: Database.Database): void {
     sqlite.exec(`
@@ -62,7 +62,7 @@ export class RunStore {
     `);
 
     // `CREATE TABLE IF NOT EXISTS` above is a no-op against a db.sqlite that
-    // already existed before a column was added — it does NOT alter it, so
+    // already existed before a column was added - it does NOT alter it, so
     // a pre-existing "runs"/"steps" table silently keeps missing the new
     // column and every write against it starts throwing. Patch existing
     // tables forward explicitly. This is the first non-purely-additive
@@ -125,7 +125,7 @@ export class RunStore {
   }
 
   /**
-   * Marks every "completed" row for (runId, stepName) as "superseded" — call
+   * Marks every "completed" row for (runId, stepName) as "superseded" - call
    * this durably, in the same call as deciding a rejection, BEFORE
    * re-executing the resubmit_to step. Without it, a crash between the
    * reject decision and the re-run's completion would leave the OLD
@@ -152,7 +152,7 @@ export class RunStore {
   }
 
   /**
-   * The most recently recorded row per step name for a run — a step can
+   * The most recently recorded row per step name for a run - a step can
    * have multiple rows across resubmit retries, and resume/approve/reject
    * only care about the latest attempt's output.
    */
@@ -200,7 +200,7 @@ export class RunStore {
       .filter((a) => a.status === "pending");
   }
 
-  /** The single pending approval for a run, if any — a run only ever has one step awaiting at a time. */
+  /** The single pending approval for a run, if any - a run only ever has one step awaiting at a time. */
   getPendingApprovalForRun(runId: string) {
     return this.db
       .select()

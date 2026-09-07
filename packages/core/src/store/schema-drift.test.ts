@@ -11,7 +11,7 @@ import * as schema from "./schema.js";
  * RunStore.migrate() hand-writes `CREATE TABLE IF NOT EXISTS` DDL instead of
  * using drizzle-kit migrations (see the comment on RunStore.migrate). That's
  * fine for the MVP's single, additive schema, but it means the DDL and
- * schema.ts can silently drift — a column added to one and not the other
+ * schema.ts can silently drift - a column added to one and not the other
  * fails at runtime as "no such column", not at review time. This test makes
  * that drift a test failure instead.
  */

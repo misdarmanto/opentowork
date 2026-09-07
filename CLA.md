@@ -3,7 +3,7 @@
 > **Not legal advice, not yet legally reviewed.** This is a standard-shape
 > draft CLA to unblock setting up CLA Assistant (or an equivalent bot) and
 > to make the intent clear to contributors. Before relying on this for a
-> real contribution at scale, have an actual lawyer review it — CLAs are
+> real contribution at scale, have an actual lawyer review it - CLAs are
 > exactly the kind of document where a small wording mistake can undo the
 > whole point of having one.
 
@@ -64,19 +64,19 @@ express or implied.
 
 ## 6. Why this exists
 
-Open Work is AGPL-3.0 — copyleft, so anyone can use, study, modify, and
+Open Work is AGPL-3.0 - copyleft, so anyone can use, study, modify, and
 redistribute it freely, and any network-served modification must also share
 its source. This CLA exists solely to let the Maintainer offer an
 alternative (e.g. commercial or hosted) license alongside AGPL-3.0 without
 needing to track down and re-request permission from every past contributor
 individually. It does not take rights away from you or from users of the
-AGPL-3.0 version — it only adds an option for the Maintainer.
+AGPL-3.0 version - it only adds an option for the Maintainer.
 
 ---
 
 **Signing process (current, manual):** no CLA-signing bot is installed on
 this repo yet. Until one is, confirm you've read and agree to this document
-by commenting on your first pull request — the maintainer will note it
+by commenting on your first pull request - the maintainer will note it
 against your GitHub account. You only need to do this once. If/when
 automated signing (e.g. CLA Assistant) is wired up, this section will be
 updated to reflect that instead.

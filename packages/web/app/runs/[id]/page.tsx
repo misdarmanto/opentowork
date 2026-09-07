@@ -109,7 +109,7 @@ export default function RunDetailPage() {
       {run.status === "running" && !pendingApproval && (
         <Button variant="outline" size="sm" className="self-start" disabled={busy} onClick={() => resumeMutation.mutate()}>
           <RotateCcw className="size-3.5" />
-          Resume (looks stalled — click if the process restarted mid-run)
+          Resume (looks stalled - click if the process restarted mid-run)
         </Button>
       )}
 

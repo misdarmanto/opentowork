@@ -6,7 +6,7 @@ import type { LoadedTool } from "./types.js";
 type McpToolConfig = Extract<ToolConfig, { type: "mcp" }>;
 
 /**
- * Connects to one MCP server (stdio transport only for now — see CLAUDE.md's
+ * Connects to one MCP server (stdio transport only for now - see CLAUDE.md's
  * MCP decision) and returns every tool it advertises, each wrapped as a
  * LoadedTool. All returned tools share one underlying client/subprocess;
  * closing any one of them closes the connection for all of them.
@@ -14,7 +14,7 @@ type McpToolConfig = Extract<ToolConfig, { type: "mcp" }>;
 export async function loadMcpTools(config: McpToolConfig): Promise<LoadedTool[]> {
   if (!config.command) {
     throw new Error(
-      `MCP tool "${config.name}" has no "command" configured — only the stdio transport is implemented (see CLAUDE.md/architecture skill)`,
+      `MCP tool "${config.name}" has no "command" configured - only the stdio transport is implemented (see CLAUDE.md/architecture skill)`,
     );
   }
 

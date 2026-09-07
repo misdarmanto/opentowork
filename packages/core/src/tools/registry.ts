@@ -62,8 +62,8 @@ export async function loadSkillsForEmployee(
 /**
  * Loads every tool an employee can call: its own `tools:` list plus whatever
  * tools its (already-resolved) skills contribute. Skills are resolved
- * separately via loadSkillsForEmployee — passed in here rather than
- * re-loaded by name — so the caller can also read `skill.instructions` for
+ * separately via loadSkillsForEmployee - passed in here rather than
+ * re-loaded by name - so the caller can also read `skill.instructions` for
  * the system prompt without loading each skill file twice.
  */
 export async function loadToolsForEmployee(
@@ -76,14 +76,14 @@ export async function loadToolsForEmployee(
   const tools = await resolveToolConfigs(configs, projectRoot, loadConnector);
 
   // Providers reject (or silently misbehave on) two tools sharing a name in
-  // one call — fail loudly here instead, since the likely cause is an
+  // one call - fail loudly here instead, since the likely cause is an
   // employee and one of its skills both pulling in the same connector.
   const seen = new Set<string>();
   for (const tool of tools) {
     if (seen.has(tool.name)) {
       throw new Error(
         `Employee "${employee.name}" ends up with two tools named "${tool.name}" (from its own tools: list ` +
-          `and/or one of its skills). Remove the duplicate — likely the same connector listed in both places.`,
+          `and/or one of its skills). Remove the duplicate - likely the same connector listed in both places.`,
       );
     }
     seen.add(tool.name);

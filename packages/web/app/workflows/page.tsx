@@ -51,7 +51,7 @@ export default function WorkflowsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Workflows</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Defined in <code className="rounded bg-muted px-1 py-0.5 text-xs">config/workflows/*.yaml</code> — git-committed, not a database row.
+            Defined in <code className="rounded bg-muted px-1 py-0.5 text-xs">config/workflows/*.yaml</code> - git-committed, not a database row.
           </p>
         </div>
         <Button nativeButton={false} render={<Link href="/workflows/new" />}>
@@ -122,13 +122,13 @@ export default function WorkflowsPage() {
                           {isHumanStep(step) ? (
                             <span>
                               <span className="font-medium">{step.name}</span>{" "}
-                              <span className="text-muted-foreground">— human approval</span>
+                              <span className="text-muted-foreground">- human approval</span>
                             </span>
                           ) : (
                             <span>
                               <span className="font-medium">{step.name}</span>{" "}
                               <span className="text-muted-foreground">
-                                — {step.employee}: {step.handoff.objective}
+                                - {step.employee}: {step.handoff.objective}
                               </span>
                             </span>
                           )}

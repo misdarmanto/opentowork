@@ -12,7 +12,7 @@ export default tseslint.config(
   {
     rules: {
       // Executor/store code intentionally uses `unknown`/narrow casts at
-      // provider/tool boundaries (see CLAUDE.md seams) — don't fight that.
+      // provider/tool boundaries (see CLAUDE.md seams) - don't fight that.
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -22,7 +22,7 @@ export default tseslint.config(
   },
   {
     // packages/web runs in the browser (client components) and Node
-    // (route handlers) — give it both global sets rather than guessing
+    // (route handlers) - give it both global sets rather than guessing
     // which file is which.
     files: ["packages/web/**/*.{ts,tsx}"],
     languageOptions: {

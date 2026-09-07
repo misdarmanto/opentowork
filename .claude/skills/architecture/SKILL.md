@@ -1,12 +1,12 @@
 ---
 name: architecture
-description: Deep architecture reference for Open Work — tech stack with rationale, the scale-without-over-engineering seam principle, employee/workflow YAML reference shapes, project structure, and competitive positioning. Load when making a structural decision, writing docs/README content, or when the shape of a YAML file needs to be exact.
+description: Deep architecture reference for Open Work - tech stack with rationale, the scale-without-over-engineering seam principle, employee/workflow YAML reference shapes, project structure, and competitive positioning. Load when making a structural decision, writing docs/README content, or when the shape of a YAML file needs to be exact.
 ---
 
-# Open Work — Architecture Reference
+# Open Work - Architecture Reference
 
 This is the detailed reference behind the terse rules in `CLAUDE.md`. `CLAUDE.md`
-is loaded every session; this file is loaded on demand — keep it that way, don't
+is loaded every session; this file is loaded on demand - keep it that way, don't
 copy this content back into `CLAUDE.md`.
 
 ## Tech stack (decided, with rationale)
@@ -16,13 +16,13 @@ copy this content back into `CLAUDE.md`.
 | Language | TypeScript | Consistent with MCP SDK, custom tools as JS functions |
 | Runtime | Node.js LTS | Most mature ecosystem for MCP + LLM SDKs |
 | Package manager | pnpm | Workspace-friendly for core/cli/web split |
-| Monorepo tool | Turborepo — add only when actually needed, not day 1 | |
+| Monorepo tool | Turborepo - add only when actually needed, not day 1 | |
 | CLI framework | Commander.js | Lightweight, unopinionated |
 | YAML parsing | `yaml` (eemeli) | Stable, comment-preserving |
 | Schema validation | Zod | Typed parse + clear validation errors |
 | Execution engine | Hand-rolled state machine | Full control over durable/resumable/structured-handoff semantics; no fighting someone else's opinionated abstraction (see "Why not LangChain" below) |
 | Runtime state storage | SQLite via `better-sqlite3`, only through a repository layer | Concurrent-safe approval queue + queryable runs, no DB server |
-| Query layer | Drizzle ORM | Type-safe; same API works against SQLite now and Postgres later — this is the scaling seam |
+| Query layer | Drizzle ORM | Type-safe; same API works against SQLite now and Postgres later - this is the scaling seam |
 | Job queue (future seam only) | In-process now; interface designed so BullMQ + Redis drops in later | Don't install Redis for the MVP |
 | LLM SDKs | `@anthropic-ai/sdk`, `openai`, `@google/generative-ai`, called through `LLMProvider` | Provider-agnostic |
 | Tool protocol | `@modelcontextprotocol/sdk` | Official MCP SDK |
@@ -42,7 +42,7 @@ executor is also easier for outside contributors to read end-to-end (no need to
 learn LangChain internals to understand Open Work), and avoids a heavy
 dependency for a deliberately narrow MVP. Revisit only if a genuinely dynamic,
 non-linear (agent-decides-the-graph) execution mode becomes a real requirement
-— not planned.
+- not planned.
 
 ### The "scale without over-engineering" principle
 
@@ -57,7 +57,7 @@ fill it with the simplest implementation:
 - Tools: always through MCP or the custom-tool schema.
 - `org_id` on every table from day one, even with zero multi-tenant UI.
 
-NOT seams — genuinely skip until asked for: SSO/complex auth, billing
+NOT seams - genuinely skip until asked for: SSO/complex auth, billing
 enforcement, visual drag-drop builder, free-form agent-to-agent chat, tenant
 provisioning.
 
@@ -150,7 +150,7 @@ on_complete:
 - vs n8n/Make/Zapier: they run deterministic sequential automations; Open Work
   runs agents that can decide strategy within a step.
 - vs CrewAI/AutoGen/LangGraph: those are libraries embedded in your own app,
-  in-process and ephemeral. Open Work is a standalone platform — YAML in,
+  in-process and ephemeral. Open Work is a standalone platform - YAML in,
   durable/resumable execution by default.
 - vs ChatDev/MetaGPT: those are software-development-specific with fixed
   roles. Open Work is general-purpose.

@@ -3,11 +3,11 @@ import type { Employee } from "../schema/employee.js";
 /**
  * Builds the system prompt actually sent to the LLM for a step. Before this
  * existed, an employee's role/department/success_criteria/system_prompt/
- * context were parsed from YAML and then never used — every agent call sent
+ * context were parsed from YAML and then never used - every agent call sent
  * only the raw objective as a user message, with no persona at all.
  *
  * `extraInstructions` is where resolved skills append their own
- * instructions (see tools/registry.ts) — kept as a parameter rather than
+ * instructions (see tools/registry.ts) - kept as a parameter rather than
  * read here so this function stays a pure, employee-only concern.
  */
 export function buildSystemPrompt(employee: Employee, extraInstructions: string[] = []): string {

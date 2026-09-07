@@ -26,7 +26,7 @@ function fakeEmployee(overrides: Partial<Employee> = {}): Employee {
 /**
  * A fake ProviderFactory that always ends the turn immediately with a fixed
  * artifact. Executor tests are about step sequencing and state transitions,
- * not real LLM behavior — that boundary is exactly what LLMProvider exists
+ * not real LLM behavior - that boundary is exactly what LLMProvider exists
  * to isolate (see CLAUDE.md's provider-agnostic seam).
  */
 function fakeProviders(artifact = "output"): ProviderFactory {
@@ -218,7 +218,7 @@ describe("WorkflowExecutor", () => {
     // so any stop_reason other than "end_turn" is a hard failure by design.
     // This also means the max_turns loop guard is currently unreachable dead
     // code: every iteration either returns (end_turn) or throws (anything
-    // else) on its first pass — a real "exceeded max_turns" path only
+    // else) on its first pass - a real "exceeded max_turns" path only
     // becomes reachable once tool_use has a branch that loops instead of
     // throwing. That gap is intentional scope, not something this test
     // should hide by asserting around it.
@@ -539,7 +539,7 @@ describe("WorkflowExecutor.approve / reject / resume", () => {
         scriptCalls++;
         if (scriptCalls === 2) {
           // Simulates the process dying partway through the resubmitted
-          // step's execution — after reject() has already committed the
+          // step's execution - after reject() has already committed the
           // decision and the supersede, before write-script's re-run ever
           // records a new "completed" row.
           throw new Error("simulated crash mid-retry");
