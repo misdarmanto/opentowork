@@ -7,10 +7,9 @@ import {
   ChevronsLeft,
   ChevronsRight,
   LayoutDashboard,
-  Plug,
   Plus,
   Settings as SettingsIcon,
-  Sparkles,
+  SlidersHorizontal,
   Users,
   Workflow as WorkflowIcon,
 } from "lucide-react";
@@ -21,8 +20,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/workflows", label: "Workflows", icon: WorkflowIcon },
   { href: "/employees", label: "Employees", icon: Users },
-  { href: "/skills", label: "Skills", icon: Sparkles },
-  { href: "/connectors", label: "Connectors", icon: Plug },
+  { href: "/customize", label: "Customize", icon: SlidersHorizontal },
 ];
 
 const SETTINGS_ITEM = { href: "/settings", label: "Settings", icon: SettingsIcon };

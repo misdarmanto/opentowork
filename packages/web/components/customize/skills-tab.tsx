@@ -14,7 +14,7 @@ import { SkillForm } from "@/components/forms/skill-form";
 
 type DialogState = { mode: "create" } | { mode: "edit"; skill: Skill } | null;
 
-export default function SkillsPage() {
+export function SkillsTab() {
   const skillsQuery = useQuery({ queryKey: ["skills"], queryFn: api.listSkills });
   const [dialogState, setDialogState] = useState<DialogState>(null);
   const [formKey, setFormKey] = useState(0);
@@ -32,17 +32,14 @@ export default function SkillsPage() {
   const close = () => setDialogState(null);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Skills</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Reusable capability packages in{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">config/skills/*.yaml</code> - instructions
-            appended to an employee's system prompt, plus any tools the skill contributes.
-          </p>
-        </div>
-        <Button onClick={openCreate}>
+        <p className="text-sm text-muted-foreground">
+          Reusable capability packages in{" "}
+          <code className="rounded bg-muted px-1 py-0.5 text-xs">config/skills/*.yaml</code> - instructions appended
+          to an employee's system prompt, plus any tools the skill contributes.
+        </p>
+        <Button onClick={openCreate} className="shrink-0">
           <Plus className="size-4" /> New skill
         </Button>
       </div>

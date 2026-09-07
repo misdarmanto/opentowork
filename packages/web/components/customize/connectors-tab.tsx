@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Skeleton } from "@/components/ui/skeleton";
 import { ConnectorForm } from "@/components/forms/connector-form";
 
-export default function ConnectorsPage() {
+export function ConnectorsTab() {
   const connectorsQuery = useQuery({ queryKey: ["connectors"], queryFn: api.listConnectors });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
@@ -22,17 +22,14 @@ export default function ConnectorsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Connectors</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Reusable tool configs in{" "}
-            <code className="rounded bg-muted px-1 py-0.5 text-xs">config/connectors/*.yaml</code> - attach one to
-            any employee by name instead of repeating the MCP/custom setup.
-          </p>
-        </div>
-        <Button onClick={openDialog}>
+        <p className="text-sm text-muted-foreground">
+          Reusable tool configs in{" "}
+          <code className="rounded bg-muted px-1 py-0.5 text-xs">config/connectors/*.yaml</code> - attach one to any
+          employee by name instead of repeating the MCP/custom setup.
+        </p>
+        <Button onClick={openDialog} className="shrink-0">
           <Plus className="size-4" /> New connector
         </Button>
       </div>
