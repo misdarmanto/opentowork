@@ -207,4 +207,18 @@ describe("employee/connector/skill builders", () => {
     saveSkill(skill, yamlText);
     expect(() => saveSkill(skill, yamlText)).toThrow(/already exists/);
   });
+
+  it("saveSkill overwrites when explicitly told to - the path the skill edit modal uses", () => {
+    const { skill, yamlText } = buildSkillFromForm({ name: TEST_SKILL, instructions: "Prefer primary sources." });
+    saveSkill(skill, yamlText);
+
+    const { skill: updated, yamlText: updatedYaml } = buildSkillFromForm({
+      name: TEST_SKILL,
+      instructions: "Prefer primary sources, updated.",
+    });
+    expect(() => saveSkill(updated, updatedYaml, { overwrite: true })).not.toThrow();
+
+    const saved = listSkills().find((s) => s.name === TEST_SKILL);
+    expect(saved?.instructions).toBe("Prefer primary sources, updated.");
+  });
 });

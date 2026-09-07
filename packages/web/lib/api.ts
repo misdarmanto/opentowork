@@ -88,6 +88,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify(input),
     }),
+  updateSkill: (name: string, input: unknown) =>
+    request<{ skill: Skill; yamlText: string }>(`/api/skills/${encodeURIComponent(name)}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }),
   createEmployee: (input: unknown) =>
     request<{ employee: Employee; yamlText: string }>("/api/employees", {
       method: "POST",

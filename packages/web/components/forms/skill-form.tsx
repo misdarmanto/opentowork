@@ -2,25 +2,39 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { Skill } from "@open-work/core";
 import { api } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { MarkdownField } from "@/components/markdown-field";
 
-export function SkillForm({ onCreated, onCancel }: { onCreated: () => void; onCancel: () => void }) {
+export function SkillForm({
+  skill,
+  onCreated,
+  onCancel,
+}: {
+  /** When set, edits this existing skill instead of creating a new one - its name can't be changed here. */
+  skill?: Skill;
+  onCreated: () => void;
+  onCancel: () => void;
+}) {
+  const isEditing = skill !== undefined;
   const queryClient = useQueryClient();
   const connectorsQuery = useQuery({ queryKey: ["connectors"], queryFn: api.listConnectors });
 
-  const [name, setName] = useState("");
-  const [instructions, setInstructions] = useState("");
-  const [connectors, setConnectors] = useState<string[]>([]);
+  const [name, setName] = useState(skill?.name ?? "");
+  const [instructions, setInstructions] = useState(skill?.instructions ?? "");
+  const [connectors, setConnectors] = useState<string[]>(
+    skill?.tools.filter((t) => t.type === "connector").map((t) => t.connector) ?? [],
+  );
   const [savedYaml, setSavedYaml] = useState<string | null>(null);
 
-  const createMutation = useMutation({
-    mutationFn: () => api.createSkill({ name, instructions, connectors }),
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      isEditing ? api.updateSkill(skill.name, { name, instructions, connectors }) : api.createSkill({ name, instructions, connectors }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["skills"] });
       setSavedYaml(data.yamlText);
@@ -40,9 +54,17 @@ export function SkillForm({ onCreated, onCancel }: { onCreated: () => void; onCa
       <div className="flex flex-col gap-4">
         <Alert>
           <AlertDescription>
-            Saved to <code className="font-mono">config/skills/{name}.yaml</code>. Add{" "}
-            <code className="font-mono">{name}</code> to any employee's <code className="font-mono">skills:</code>{" "}
-            list to attach it.
+            {isEditing ? (
+              <>
+                Saved changes to <code className="font-mono">config/skills/{name}.yaml</code>.
+              </>
+            ) : (
+              <>
+                Saved to <code className="font-mono">config/skills/{name}.yaml</code>. Add{" "}
+                <code className="font-mono">{name}</code> to any employee's <code className="font-mono">skills:</code>{" "}
+                list to attach it.
+              </>
+            )}
           </AlertDescription>
         </Alert>
         <pre className="max-h-64 overflow-auto rounded-md bg-muted p-4 font-mono text-xs">{savedYaml}</pre>
@@ -63,19 +85,17 @@ export function SkillForm({ onCreated, onCancel }: { onCreated: () => void; onCa
             value={name}
             onChange={(e) => setName(e.target.value.trim().replace(/\s+/g, "-"))}
             placeholder="web-research"
+            disabled={isEditing}
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="s-instructions">Instructions</Label>
-          <Textarea
-            id="s-instructions"
-            rows={5}
-            value={instructions}
-            onChange={(e) => setInstructions(e.target.value)}
-            placeholder="Prefer primary sources. Always capture a URL per claim…"
-          />
-        </div>
+        <MarkdownField
+          id="s-instructions"
+          value={instructions}
+          onChange={setInstructions}
+          rows={8}
+          placeholder="Prefer primary sources. Always capture a URL per claim…"
+        />
 
         {connectorsQuery.data?.connectors && connectorsQuery.data.connectors.length > 0 && (
           <div className="flex flex-col gap-1.5">
@@ -97,9 +117,9 @@ export function SkillForm({ onCreated, onCancel }: { onCreated: () => void; onCa
         )}
       </div>
 
-      {createMutation.isError && (
+      {saveMutation.isError && (
         <Alert variant="destructive">
-          <AlertDescription>{(createMutation.error as Error).message}</AlertDescription>
+          <AlertDescription>{(saveMutation.error as Error).message}</AlertDescription>
         </Alert>
       )}
 
@@ -107,8 +127,8 @@ export function SkillForm({ onCreated, onCancel }: { onCreated: () => void; onCa
         <Button variant="outline" onClick={onCancel}>
           Cancel
         </Button>
-        <Button disabled={!canSubmit || createMutation.isPending} onClick={() => createMutation.mutate()}>
-          {createMutation.isPending ? "Saving…" : "Save skill"}
+        <Button disabled={!canSubmit || saveMutation.isPending} onClick={() => saveMutation.mutate()}>
+          {saveMutation.isPending ? "Saving…" : isEditing ? "Save changes" : "Save skill"}
         </Button>
       </DialogFooter>
     </div>

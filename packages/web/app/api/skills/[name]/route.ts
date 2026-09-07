@@ -1,0 +1,19 @@
+import { NextResponse } from "next/server";
+import { buildSkillFromForm, saveSkill, type SkillFormInput } from "@/lib/server/workflows";
+
+/**
+ * Renaming isn't supported here - the route param names the file to
+ * overwrite, and the request body's `name` is forced to match it. To rename
+ * a skill, create a new one and delete the old file by hand.
+ */
+export async function PUT(request: Request, { params }: { params: Promise<{ name: string }> }) {
+  try {
+    const { name } = await params;
+    const input = (await request.json()) as SkillFormInput;
+    const { skill, yamlText } = buildSkillFromForm({ ...input, name });
+    saveSkill(skill, yamlText, { overwrite: true });
+    return NextResponse.json({ skill, yamlText });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
+  }
+}
