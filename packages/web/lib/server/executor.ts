@@ -11,6 +11,7 @@ import {
   parseConnector,
   parseEmployee,
   parseSkill,
+  readSettingsFile,
   writeArtifacts,
   writeStateSnapshot,
   type Connector,
@@ -19,7 +20,7 @@ import {
   type Skill,
   type Workflow,
 } from "@open-work/core";
-import { CONFIG_DIR, PROJECT_ROOT, RUNS_DIR } from "./paths";
+import { CONFIG_DIR, PROJECT_ROOT, RUNS_DIR, STATE_DIR } from "./paths";
 import { getStore } from "./store";
 
 // Employee/connector/skill names become filenames on disk - same path-traversal
@@ -52,12 +53,19 @@ async function loadSkill(name: string): Promise<Skill> {
 
 function buildProviderFactory(): ProviderFactory {
   const factory = new ProviderFactory();
-  if (process.env.ANTHROPIC_API_KEY) {
-    factory.register("anthropic", new AnthropicProvider(), { apiKey: process.env.ANTHROPIC_API_KEY });
+  // A key set through the Settings page (.open-work/settings.json) overrides
+  // the equivalent env var - see packages/cli/src/index.ts's identical logic.
+  const settings = readSettingsFile(STATE_DIR);
+
+  const anthropicKey = settings.apiKeys.anthropic ?? process.env.ANTHROPIC_API_KEY;
+  if (anthropicKey) {
+    factory.register("anthropic", new AnthropicProvider(), { apiKey: anthropicKey });
   }
-  if (process.env.DEEPSEEK_API_KEY) {
+
+  const deepseekKey = settings.apiKeys.deepseek ?? process.env.DEEPSEEK_API_KEY;
+  if (deepseekKey) {
     factory.register("deepseek", new AnthropicProvider(), {
-      apiKey: process.env.DEEPSEEK_API_KEY,
+      apiKey: deepseekKey,
       baseUrl: "https://api.deepseek.com/anthropic",
     });
   }

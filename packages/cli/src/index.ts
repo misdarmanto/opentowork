@@ -18,6 +18,7 @@ import {
   writeArtifacts,
   writeStateSnapshot,
   isHumanStep,
+  readSettingsFile,
   type Connector,
   type Employee,
   type Skill,
@@ -75,14 +76,23 @@ async function loadSkill(name: string): Promise<Skill> {
 
 function buildProviderFactory(): ProviderFactory {
   const factory = new ProviderFactory();
-  if (process.env.ANTHROPIC_API_KEY) {
-    factory.register("anthropic", new AnthropicProvider(), { apiKey: process.env.ANTHROPIC_API_KEY });
+  // A key set through the web UI's Settings page (.open-work/settings.json)
+  // takes effect here too - same engine, same files, per CLAUDE.md's
+  // dual-interface decision - and overrides the equivalent env var so the
+  // UI is the one source of truth once someone's used it.
+  const settings = readSettingsFile(STATE_DIR);
+
+  const anthropicKey = settings.apiKeys.anthropic ?? process.env.ANTHROPIC_API_KEY;
+  if (anthropicKey) {
+    factory.register("anthropic", new AnthropicProvider(), { apiKey: anthropicKey });
   }
-  if (process.env.DEEPSEEK_API_KEY) {
+
+  const deepseekKey = settings.apiKeys.deepseek ?? process.env.DEEPSEEK_API_KEY;
+  if (deepseekKey) {
     // DeepSeek's API is Anthropic-compatible (https://api-docs.deepseek.com/guides/anthropic_api),
     // so the same provider class works - only the base URL and key differ.
     factory.register("deepseek", new AnthropicProvider(), {
-      apiKey: process.env.DEEPSEEK_API_KEY,
+      apiKey: deepseekKey,
       baseUrl: "https://api.deepseek.com/anthropic",
     });
   }

@@ -3,6 +3,8 @@ export * from "./schema/workflow.js";
 export * from "./schema/tool.js";
 export * from "./schema/connector.js";
 export * from "./schema/skill.js";
+export * from "./schema/settings.js";
+export * from "./store/settings-file.js";
 export * from "./providers/types.js";
 export * from "./providers/factory.js";
 export * from "./providers/anthropic.js";

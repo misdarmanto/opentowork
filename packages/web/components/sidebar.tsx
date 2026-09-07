@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   Plug,
   Plus,
+  Settings as SettingsIcon,
   Sparkles,
   Users,
   Workflow as WorkflowIcon,
@@ -23,6 +24,8 @@ const NAV_ITEMS = [
   { href: "/skills", label: "Skills", icon: Sparkles },
   { href: "/connectors", label: "Connectors", icon: Plug },
 ];
+
+const SETTINGS_ITEM = { href: "/settings", label: "Settings", icon: SettingsIcon };
 
 const STORAGE_KEY = "open-work:sidebar-collapsed";
 
@@ -86,32 +89,43 @@ export function Sidebar() {
         </Button>
       </div>
 
-      <nav className="flex flex-col gap-1 p-3">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              title={collapsed ? label : undefined}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                collapsed && "justify-center px-0",
-                active
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted",
-              )}
-            >
-              <Icon className="size-4 shrink-0" />
-              {!collapsed && label}
-            </Link>
-          );
-        })}
+      <nav className="flex flex-1 flex-col gap-1 p-3">
+        {NAV_ITEMS.map((item) => renderNavLink(item, pathname, collapsed))}
       </nav>
 
-      <div className="mt-auto border-t border-border px-4 py-3 text-xs text-muted-foreground">
+      <nav className="flex flex-col gap-1 border-t border-border p-3">
+        {renderNavLink(SETTINGS_ITEM, pathname, collapsed)}
+      </nav>
+
+      <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
         {collapsed ? "OW" : "Open Work - self-hosted, AGPL-3.0"}
       </div>
     </aside>
+  );
+}
+
+function renderNavLink(
+  item: { href: string; label: string; icon: React.ComponentType<{ className?: string }> },
+  pathname: string,
+  collapsed: boolean,
+) {
+  const { href, label, icon: Icon } = item;
+  const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+  return (
+    <Link
+      key={href}
+      href={href}
+      title={collapsed ? label : undefined}
+      className={cn(
+        "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+        collapsed && "justify-center px-0",
+        active
+          ? "bg-secondary text-secondary-foreground"
+          : "text-muted-foreground hover:text-foreground hover:bg-muted",
+      )}
+    >
+      <Icon className="size-4 shrink-0" />
+      {!collapsed && label}
+    </Link>
   );
 }
