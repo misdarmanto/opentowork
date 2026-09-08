@@ -63,17 +63,19 @@ function OpenDialogFromQueryParam({ onOpen }: { onOpen: () => void }) {
 
 /**
  * Reads the ?open=<name> query param, set by the sidebar's workflow
- * dropdown so clicking a workflow name jumps straight to it here.
+ * dropdown so clicking a workflow name jumps straight to it here. No
+ * one-shot guard (unlike OpenDialogFromQueryParam above): `onExpand` is
+ * `setExpanded` and `router` is stable across renders, so this can safely
+ * re-run on every distinct ?open= value - including a second click while
+ * already sitting on /workflows, which a fire-once guard would swallow.
  */
 function ExpandWorkflowFromQueryParam({ onExpand }: { onExpand: (name: string) => void }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const firedRef = useRef(false);
 
   useEffect(() => {
     const open = searchParams.get("open");
-    if (!firedRef.current && open) {
-      firedRef.current = true;
+    if (open) {
       onExpand(open);
       router.replace("/workflows");
     }

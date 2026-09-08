@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import {
-  ChevronDown,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
@@ -137,21 +136,26 @@ export function Sidebar({ email }: { email: string }) {
                     title={workflowsExpanded ? "Hide workflows" : "Show workflows"}
                     className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
-                    {workflowsExpanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+                    <ChevronRight
+                      className={cn("size-3.5 transition-transform duration-150", workflowsExpanded && "rotate-90")}
+                    />
                   </button>
                 )}
               </div>
               {!collapsed && workflowsExpanded && (
-                <div className="ml-4 flex flex-col gap-0.5 border-l border-border py-1 pl-3">
+                <div className="flex flex-col gap-0.5 py-0.5 pl-9 pr-1">
+                  {workflowsQuery.isLoading && (
+                    <span className="truncate px-2 py-1.5 text-xs text-muted-foreground">Loading…</span>
+                  )}
                   {workflowsQuery.data?.workflows.length === 0 && (
-                    <span className="px-2 py-1 text-xs text-muted-foreground">No workflows yet</span>
+                    <span className="truncate px-2 py-1.5 text-xs text-muted-foreground">No workflows yet</span>
                   )}
                   {workflowsQuery.data?.workflows.map((wf) => (
                     <Link
                       key={wf.name}
                       href={`/workflows?open=${encodeURIComponent(wf.name)}`}
                       title={wf.name}
-                      className="truncate rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                      className="truncate rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                     >
                       {wf.name}
                     </Link>
