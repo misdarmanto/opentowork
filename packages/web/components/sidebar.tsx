@@ -11,6 +11,7 @@ import {
   Plus,
   Settings as SettingsIcon,
   SlidersHorizontal,
+  User,
   Users,
   Workflow as WorkflowIcon,
 } from "lucide-react";
@@ -24,7 +25,10 @@ const NAV_ITEMS = [
   { href: "/customize", label: "Customize", icon: SlidersHorizontal },
 ];
 
-const SETTINGS_ITEM = { href: "/settings", label: "Settings", icon: SettingsIcon };
+const SECONDARY_ITEMS = [
+  { href: "/profile", label: "Profile", icon: User },
+  { href: "/settings", label: "Settings", icon: SettingsIcon },
+];
 
 const STORAGE_KEY = "open-work:sidebar-collapsed";
 
@@ -105,7 +109,7 @@ export function Sidebar({ email }: { email: string }) {
       </nav>
 
       <nav className="flex flex-col gap-1 border-t border-border p-3">
-        {renderNavLink(SETTINGS_ITEM, pathname, collapsed)}
+        {SECONDARY_ITEMS.map((item) => renderNavLink(item, pathname, collapsed))}
       </nav>
 
       <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
@@ -119,9 +123,13 @@ export function Sidebar({ email }: { email: string }) {
         )}
       >
         {!collapsed && (
-          <span className="min-w-0 truncate text-xs text-muted-foreground" title={email}>
+          <Link
+            href="/profile"
+            className="min-w-0 truncate text-xs text-muted-foreground hover:text-foreground hover:underline"
+            title={email}
+          >
             {email}
-          </span>
+          </Link>
         )}
         <button
           type="button"

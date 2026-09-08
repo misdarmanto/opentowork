@@ -120,4 +120,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ action: "removeCustomModel", provider, name }),
     }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ ok: true }>("/api/auth/password", {
+      method: "PUT",
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
 };
