@@ -47,3 +47,21 @@ export const approvals = sqliteTable("approvals", {
   decidedAt: integer("decided_at", { mode: "timestamp" }),
   decidedBy: text("decided_by"),
 });
+
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  orgId: text("org_id").notNull().default("default"),
+  email: text("email").notNull().unique(),
+  // scrypt "salt:hash" hex pair (packages/core/src/auth/password.ts) - never the plain password.
+  passwordHash: text("password_hash").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});
+
+export const sessions = sqliteTable("sessions", {
+  // The opaque session token itself is the primary key - one row lookup per request, no separate token->id indirection.
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  orgId: text("org_id").notNull().default("default"),
+  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+});

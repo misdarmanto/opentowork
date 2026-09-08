@@ -30,7 +30,13 @@ describe("RunStore schema / DDL drift", () => {
 
     const raw = new Database(dbPath, { readonly: true });
     try {
-      const tables = { runs: schema.runs, steps: schema.steps, approvals: schema.approvals };
+      const tables = {
+        runs: schema.runs,
+        steps: schema.steps,
+        approvals: schema.approvals,
+        users: schema.users,
+        sessions: schema.sessions,
+      };
 
       for (const [tableName, table] of Object.entries(tables)) {
         const ddlColumns = new Set(

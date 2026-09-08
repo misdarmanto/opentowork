@@ -13,3 +13,4 @@ export * from "./executor/index.js";
 export * from "./executor/tracer.js";
 export * from "./tools/registry.js";
 export * from "./logger.js";
+export * from "./auth/password.js";

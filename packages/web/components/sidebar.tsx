@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ChevronsLeft,
   ChevronsRight,
   LayoutDashboard,
+  LogOut,
   Plus,
   Settings as SettingsIcon,
   SlidersHorizontal,
@@ -27,9 +28,21 @@ const SETTINGS_ITEM = { href: "/settings", label: "Settings", icon: SettingsIcon
 
 const STORAGE_KEY = "open-work:sidebar-collapsed";
 
-export function Sidebar() {
+export function Sidebar({ email }: { email: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const logout = async () => {
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      router.push("/login");
+      router.refresh();
+    }
+  };
 
   useEffect(() => {
     try {
@@ -97,6 +110,28 @@ export function Sidebar() {
 
       <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
         {collapsed ? "OW" : "Open Work - self-hosted, AGPL-3.0"}
+      </div>
+
+      <div
+        className={cn(
+          "flex items-center gap-2 border-t border-border px-3 py-3",
+          collapsed ? "justify-center" : "justify-between",
+        )}
+      >
+        {!collapsed && (
+          <span className="min-w-0 truncate text-xs text-muted-foreground" title={email}>
+            {email}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={logout}
+          disabled={loggingOut}
+          title="Log out"
+          className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+        >
+          <LogOut className="size-4" />
+        </button>
       </div>
     </aside>
   );

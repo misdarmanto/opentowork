@@ -50,6 +50,7 @@ SSO/complex auth, LangChain/LangGraph.
 - Build: `pnpm --filter @open-work/core build`
 - Validate a workflow: `npx tsx packages/cli/src/index.ts validate <name>`
 - Run: `npx tsx packages/cli/src/index.ts run <name> -p key=value`
+- Seed (or reset the password of) the one web login: `npx tsx packages/cli/src/index.ts seed-user --email <email> --password <password>`
 - Full check before calling anything done: `/check` (build + lint + test)
 
 ## Working conventions

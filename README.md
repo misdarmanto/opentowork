@@ -124,6 +124,15 @@ npx tsx packages/cli/src/index.ts run research-and-script -p topic="AI agents in
 
 Or the web UI: `pnpm --filter @open-work/web dev`, then open
 http://localhost:3000 - see [`packages/web/README.md`](./packages/web/README.md).
+The web UI requires a login (email + password, no SSO); seed the one account
+it uses before your first visit:
+
+```bash
+npx tsx packages/cli/src/index.ts seed-user --email you@example.com --password "a real password"
+```
+
+Re-running `seed-user` with the same email resets that account's password
+instead of creating a duplicate.
 
 ## Why it's built this way, vs the alternatives
 

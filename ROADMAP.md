@@ -351,6 +351,54 @@ after - this feature ships with no bundled `word-count` connector/skill.
 
 ---
 
+## Phase 7 - Email/password authentication for the web UI
+
+The web app had no login at all - anyone who could reach the port could run
+workflows, read every trace, and change settings. Requested explicitly, not
+SSO (still explicitly out of scope per the non-goals below): one email +
+password account, gating the whole app.
+
+1. [x] `users`/`sessions` tables added to the existing SQLite store
+   (`packages/core/src/store/schema.ts`, migrated in `RunStore.migrate()`
+   the same hand-rolled way `runs`/`steps`/`approvals` already are).
+   Passwords are never stored in plain text - `packages/core/src/auth/
+   password.ts` hashes with node:crypto's scrypt (random salt per password,
+   constant-time compare on verify), no extra dependency for something this
+   sensitive.
+2. [x] `packages/cli/src/index.ts`'s new `seed-user --email --password`
+   command creates the one account, or resets its password if the email
+   already exists (upsert, so re-running it is always safe).
+3. [x] `proxy.ts` (this Next.js version renamed `middleware.ts` to
+   `proxy.ts` - per `packages/web/node_modules/next/dist/docs/01-app/
+   03-api-reference/03-file-conventions/proxy.md`, read because
+   `packages/web/AGENTS.md`'s general warning to check the bundled docs
+   before writing any code caught this before a `middleware.ts` got written
+   that would've silently never run) gates every route
+   except `/login` and the login API call itself, checking the real
+   session row - not just cookie presence - since Proxy defaults to the
+   Node.js runtime here and can hit SQLite directly. `app/(app)/layout.tsx`
+   re-checks the session as defense in depth, per the framework's own
+   guidance not to rely on Proxy alone.
+4. [x] `/login` page, session cookie (httpOnly, 30-day expiry), and a
+   logout button in the sidebar showing the signed-in email.
+
+**Done when:** a fresh clone with no seeded user can't reach anything past
+`/login`; `seed-user` creates one; that login works end to end. **Verified**
+in a real browser against a real seeded account: confirmed `/employees`
+redirects to `/login?next=%2Femployees` when signed out, a wrong password is
+rejected with a real 401, the correct password signs in and lands back on
+the original deep-linked page, and logging out via the sidebar button
+returns to `/login`. Caught and fixed a real bug in the process: the
+`?next=` reader on the login page called its parent's setState directly
+during render instead of in an effect - the same class of bug already hit
+(and fixed) twice elsewhere in this app - confirmed fixed by checking a
+brand-new browser tab's console for the "Cannot update a component while
+rendering a different component" error, since a reused tab's console
+history persists across navigations and would have shown it as a false
+positive.
+
+---
+
 ## Explicit non-goals for "done"
 
 Do not add these while chasing "done" - they're v1.1+ per `CLAUDE.md` and

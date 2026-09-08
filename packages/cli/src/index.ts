@@ -20,6 +20,7 @@ import {
   isHumanStep,
   readSettingsFile,
   createLogger,
+  hashPassword,
   type Connector,
   type Employee,
   type Skill,
@@ -248,8 +249,32 @@ program
     }
   });
 
+program
+  .command("seed-user")
+  .description("Create (or reset the password of) the one login the web app uses")
+  .requiredOption("-e, --email <email>", "login email")
+  .requiredOption("-p, --password <password>", "login password (hashed before storage - never logged or echoed back)")
+  .action(async (opts: { email: string; password: string }) => {
+    if (opts.password.length < 8) {
+      console.error("Password must be at least 8 characters.");
+      process.exitCode = 1;
+      return;
+    }
+    ensureStateDir();
+    const store = new RunStore(path.join(STATE_DIR, "db.sqlite"));
+    const passwordHash = await hashPassword(opts.password);
+    const existing = store.findUserByEmail(opts.email);
+    store.upsertUser({ id: existing?.id ?? randomUUID(), email: opts.email, passwordHash });
+    console.log(`${existing ? "Updated password for" : "Created"} user "${opts.email}".`);
+  });
+
+/** Drops a flag's value from the logged argv when a caller might pass a secret positionally - e.g. `--password foo`. */
+function redactSecretFlags(argv: string[], flags: string[]): string[] {
+  return argv.map((arg, i) => (i > 0 && flags.includes(argv[i - 1]) ? "<redacted>" : arg));
+}
+
 program.parseAsync().catch((err) => {
-  logger.error("command failed", { argv: process.argv.slice(2), err });
+  logger.error("command failed", { argv: redactSecretFlags(process.argv.slice(2), ["-p", "--password"]), err });
   console.error(err instanceof Error ? err.message : String(err));
   process.exitCode = 1;
 });

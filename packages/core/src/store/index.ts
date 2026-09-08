@@ -59,6 +59,20 @@ export class RunStore {
         decided_at INTEGER,
         decided_by TEXT
       );
+      CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        org_id TEXT NOT NULL DEFAULT 'default',
+        email TEXT NOT NULL UNIQUE,
+        password_hash TEXT NOT NULL,
+        created_at INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        org_id TEXT NOT NULL DEFAULT 'default',
+        expires_at INTEGER NOT NULL,
+        created_at INTEGER NOT NULL
+      );
     `);
 
     // `CREATE TABLE IF NOT EXISTS` above is a no-op against a db.sqlite that
@@ -238,5 +252,57 @@ export class RunStore {
         ),
       )
       .all().length;
+  }
+
+  /**
+   * Creates a user, or updates an existing one's password hash if the email
+   * already exists - lets the seeder be re-run safely to reset credentials
+   * rather than failing on a second run.
+   */
+  upsertUser(input: { id: string; email: string; passwordHash: string; orgId?: string }): void {
+    const existing = this.findUserByEmail(input.email);
+    if (existing) {
+      this.db.update(schema.users).set({ passwordHash: input.passwordHash }).where(eq(schema.users.id, existing.id)).run();
+      return;
+    }
+    this.db
+      .insert(schema.users)
+      .values({
+        id: input.id,
+        orgId: input.orgId ?? "default",
+        email: input.email,
+        passwordHash: input.passwordHash,
+        createdAt: new Date(),
+      })
+      .run();
+  }
+
+  findUserByEmail(email: string) {
+    return this.db.select().from(schema.users).where(eq(schema.users.email, email)).get();
+  }
+
+  findUserById(id: string) {
+    return this.db.select().from(schema.users).where(eq(schema.users.id, id)).get();
+  }
+
+  createSession(input: { id: string; userId: string; expiresAt: Date; orgId?: string }): void {
+    this.db
+      .insert(schema.sessions)
+      .values({
+        id: input.id,
+        userId: input.userId,
+        orgId: input.orgId ?? "default",
+        expiresAt: input.expiresAt,
+        createdAt: new Date(),
+      })
+      .run();
+  }
+
+  findSession(id: string) {
+    return this.db.select().from(schema.sessions).where(eq(schema.sessions.id, id)).get();
+  }
+
+  deleteSession(id: string): void {
+    this.db.delete(schema.sessions).where(eq(schema.sessions.id, id)).run();
   }
 }
