@@ -61,6 +61,27 @@ function OpenDialogFromQueryParam({ onOpen }: { onOpen: () => void }) {
   return null;
 }
 
+/**
+ * Reads the ?open=<name> query param, set by the sidebar's workflow
+ * dropdown so clicking a workflow name jumps straight to it here.
+ */
+function ExpandWorkflowFromQueryParam({ onExpand }: { onExpand: (name: string) => void }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const firedRef = useRef(false);
+
+  useEffect(() => {
+    const open = searchParams.get("open");
+    if (!firedRef.current && open) {
+      firedRef.current = true;
+      onExpand(open);
+      router.replace("/workflows");
+    }
+  }, [searchParams, router, onExpand]);
+
+  return null;
+}
+
 export default function WorkflowsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -83,10 +104,18 @@ export default function WorkflowsPage() {
     setDialogOpen(true);
   };
 
+  useEffect(() => {
+    if (!expanded) return;
+    document.getElementById(`workflow-${expanded}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [expanded, workflowsQuery.data]);
+
   return (
     <div className="flex flex-col gap-6">
       <Suspense fallback={null}>
         <OpenDialogFromQueryParam onOpen={openDialog} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <ExpandWorkflowFromQueryParam onExpand={setExpanded} />
       </Suspense>
 
       <div className="flex items-center justify-between">
@@ -135,7 +164,7 @@ export default function WorkflowsPage() {
           {workflowsQuery.data?.workflows.map((wf) => {
             const isExpanded = expanded === wf.name;
             return (
-              <Card key={wf.name}>
+              <Card key={wf.name} id={`workflow-${wf.name}`}>
                 <CardHeader className="gap-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">

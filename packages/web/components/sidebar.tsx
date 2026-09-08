@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import {
+  ChevronDown,
+  ChevronRight,
   ChevronsLeft,
   ChevronsRight,
   LayoutDashboard,
@@ -17,6 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api";
 
 const NAV_ITEMS = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -31,12 +35,15 @@ const SECONDARY_ITEMS = [
 ];
 
 const STORAGE_KEY = "open-work:sidebar-collapsed";
+const WORKFLOWS_EXPANDED_KEY = "open-work:sidebar-workflows-expanded";
 
 export function Sidebar({ email }: { email: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [workflowsExpanded, setWorkflowsExpanded] = useState(false);
+  const workflowsQuery = useQuery({ queryKey: ["workflows"], queryFn: api.listWorkflows });
 
   const logout = async () => {
     setLoggingOut(true);
@@ -51,10 +58,23 @@ export function Sidebar({ email }: { email: string }) {
   useEffect(() => {
     try {
       setCollapsed(localStorage.getItem(STORAGE_KEY) === "true");
+      setWorkflowsExpanded(localStorage.getItem(WORKFLOWS_EXPANDED_KEY) === "true");
     } catch {
       // localStorage can throw in a locked-down browser context - default (expanded) is fine.
     }
   }, []);
+
+  const toggleWorkflowsExpanded = () => {
+    setWorkflowsExpanded((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(WORKFLOWS_EXPANDED_KEY, String(next));
+      } catch {
+        // per-viewer convenience only - losing it just means it doesn't persist.
+      }
+      return next;
+    });
+  };
 
   const toggle = () => {
     setCollapsed((prev) => {
@@ -105,7 +125,44 @@ export function Sidebar({ email }: { email: string }) {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 p-3">
-        {NAV_ITEMS.map((item) => renderNavLink(item, pathname, collapsed))}
+        {NAV_ITEMS.map((item) =>
+          item.href === "/workflows" ? (
+            <div key={item.href} className="flex flex-col">
+              <div className="flex items-center gap-0.5">
+                <div className="min-w-0 flex-1">{renderNavLink(item, pathname, collapsed)}</div>
+                {!collapsed && (
+                  <button
+                    type="button"
+                    onClick={toggleWorkflowsExpanded}
+                    title={workflowsExpanded ? "Hide workflows" : "Show workflows"}
+                    className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    {workflowsExpanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
+                  </button>
+                )}
+              </div>
+              {!collapsed && workflowsExpanded && (
+                <div className="ml-4 flex flex-col gap-0.5 border-l border-border py-1 pl-3">
+                  {workflowsQuery.data?.workflows.length === 0 && (
+                    <span className="px-2 py-1 text-xs text-muted-foreground">No workflows yet</span>
+                  )}
+                  {workflowsQuery.data?.workflows.map((wf) => (
+                    <Link
+                      key={wf.name}
+                      href={`/workflows?open=${encodeURIComponent(wf.name)}`}
+                      title={wf.name}
+                      className="truncate rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      {wf.name}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            renderNavLink(item, pathname, collapsed)
+          ),
+        )}
       </nav>
 
       <nav className="flex flex-col gap-1 border-t border-border p-3">
