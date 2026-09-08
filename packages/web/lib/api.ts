@@ -58,6 +58,7 @@ export interface SettingsView {
 
 export const api = {
   listWorkflows: () => request<{ workflows: Workflow[] }>("/api/workflows"),
+  getWorkflow: (name: string) => request<{ workflow: Workflow }>(`/api/workflows/${encodeURIComponent(name)}`),
   listEmployees: () => request<{ employees: Employee[] }>("/api/employees"),
   listRuns: () => request<{ runs: RunRow[] }>("/api/runs"),
   listApprovals: () => request<{ pending: ApprovalRow[] }>("/api/approvals"),

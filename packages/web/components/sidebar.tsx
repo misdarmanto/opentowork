@@ -125,41 +125,62 @@ export function Sidebar({ email }: { email: string }) {
 
       <nav className="flex flex-1 flex-col gap-1 p-3">
         {NAV_ITEMS.map((item) =>
-          item.href === "/workflows" ? (
+          item.href === "/workflows" && !collapsed ? (
             <div key={item.href} className="flex flex-col">
-              <div className="flex items-center gap-0.5">
-                <div className="min-w-0 flex-1">{renderNavLink(item, pathname, collapsed)}</div>
-                {!collapsed && (
-                  <button
-                    type="button"
-                    onClick={toggleWorkflowsExpanded}
-                    title={workflowsExpanded ? "Hide workflows" : "Show workflows"}
-                    className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                  >
-                    <ChevronRight
-                      className={cn("size-3.5 transition-transform duration-150", workflowsExpanded && "rotate-90")}
-                    />
-                  </button>
+              <button
+                type="button"
+                onClick={toggleWorkflowsExpanded}
+                aria-expanded={workflowsExpanded}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  pathname.startsWith("/workflows")
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted",
                 )}
-              </div>
-              {!collapsed && workflowsExpanded && (
+              >
+                <item.icon className="size-4 shrink-0" />
+                <span className="flex-1 text-left">{item.label}</span>
+                <ChevronRight
+                  className={cn("size-3.5 shrink-0 transition-transform duration-150", workflowsExpanded && "rotate-90")}
+                />
+              </button>
+              {workflowsExpanded && (
                 <div className="flex flex-col gap-0.5 py-0.5 pl-9 pr-1">
+                  <Link
+                    href="/workflows"
+                    className={cn(
+                      "truncate rounded-md px-2 py-1.5 text-xs font-medium transition-colors",
+                      pathname === "/workflows"
+                        ? "bg-secondary text-secondary-foreground"
+                        : "text-foreground hover:bg-muted",
+                    )}
+                  >
+                    All Workflows
+                  </Link>
                   {workflowsQuery.isLoading && (
                     <span className="truncate px-2 py-1.5 text-xs text-muted-foreground">Loading…</span>
                   )}
                   {workflowsQuery.data?.workflows.length === 0 && (
                     <span className="truncate px-2 py-1.5 text-xs text-muted-foreground">No workflows yet</span>
                   )}
-                  {workflowsQuery.data?.workflows.map((wf) => (
-                    <Link
-                      key={wf.name}
-                      href={`/workflows?open=${encodeURIComponent(wf.name)}`}
-                      title={wf.name}
-                      className="truncate rounded-md px-2 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    >
-                      {wf.name}
-                    </Link>
-                  ))}
+                  {workflowsQuery.data?.workflows.map((wf) => {
+                    const href = `/workflows/${encodeURIComponent(wf.name)}`;
+                    return (
+                      <Link
+                        key={wf.name}
+                        href={href}
+                        title={wf.name}
+                        className={cn(
+                          "truncate rounded-md px-2 py-1.5 text-xs transition-colors",
+                          pathname === href
+                            ? "bg-secondary text-secondary-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        )}
+                      >
+                        {wf.name}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
