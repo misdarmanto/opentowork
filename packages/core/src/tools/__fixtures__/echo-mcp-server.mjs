@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // A minimal, real MCP server used only by mcp.test.ts, run as a genuine
-// child process over stdio — not mocked. Exercises the actual wire protocol
+// child process over stdio - not mocked. Exercises the actual wire protocol
 // loadMcpTools() talks to.
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";

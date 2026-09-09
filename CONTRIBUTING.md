@@ -1,6 +1,6 @@
 # Contributing to Open Work
 
-Thanks for considering a contribution. This project is young — the fastest
+Thanks for considering a contribution. This project is young - the fastest
 way to have real impact right now is a well-scoped bug fix, a new MCP
 integration, or a docs fix, rather than a large new feature.
 
@@ -32,7 +32,7 @@ pnpm --filter @open-work/cli dev -- validate research-and-script
 
 ## Before opening a PR
 
-Run the full check locally — this is exactly what CI runs:
+Run the full check locally - this is exactly what CI runs:
 
 ```bash
 pnpm build
@@ -41,7 +41,7 @@ pnpm test
 ```
 
 If you're touching `packages/core/src/store/schema.ts`, also update the
-hand-written DDL in `packages/core/src/store/index.ts`'s `migrate()` —
+hand-written DDL in `packages/core/src/store/index.ts`'s `migrate()` -
 `schema-drift.test.ts` will fail the build if the two disagree, which is the
 point: it's the guardrail that makes it safe to change the schema without a
 full migration framework.
@@ -49,7 +49,7 @@ full migration framework.
 ## What "done" looks like for a PR
 
 - **It's been run, not just written.** If you're adding tool-calling,
-  resume logic, or an integration, actually exercise it — a fake/mocked
+  resume logic, or an integration, actually exercise it - a fake/mocked
   path proves the code shape is right, but this project has already shipped
   things that looked done and threw on first real use. Say in the PR
   description what you actually ran and what you saw.
@@ -67,9 +67,9 @@ the diff. No AI attribution trailers.
 
 Open Work is licensed AGPL-3.0. To keep the option of an eventual hosted
 version open without ever taking the project fully closed-source, first-time
-contributors are asked to sign a CLA — see [CLA.md](./CLA.md) for what it
+contributors are asked to sign a CLA - see [CLA.md](./CLA.md) for what it
 says. **Automated signing isn't wired up yet** (no CLA Assistant or
-equivalent bot installed on this repo) — until it is, comment on your PR
+equivalent bot installed on this repo) - until it is, comment on your PR
 confirming you've read and agree to `CLA.md`, or reach out to the maintainer
 directly. You only need to do this once.
 

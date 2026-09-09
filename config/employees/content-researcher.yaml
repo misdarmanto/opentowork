@@ -17,15 +17,12 @@ skills:
   - source-verification
 
 tools:
-  # Free, no API key — scrapes DuckDuckGo's HTML search. Verified to connect
-  # and expose duckduckgo_web_search correctly via the MCP protocol; actual
-  # search results are unverified in CI/sandboxed environments because DDG
-  # anomaly-blocks datacenter IPs (see ROADMAP.md Phase 2). Works from most
-  # residential/personal-machine IPs.
-  - type: mcp
-    name: duckduckgo
-    command: npx
-    args: ["-y", "duckduckgo-mcp-server"]
+  # See config/connectors/duckduckgo.yaml for what this actually runs and
+  # why (free, no API key, unverified search results in CI/sandboxed
+  # environments - see ROADMAP.md Phase 2). Shared with
+  # content-researcher-deepseek.yaml so both stay in sync automatically.
+  - type: connector
+    connector: duckduckgo
 
 constraints:
   max_turns: 10

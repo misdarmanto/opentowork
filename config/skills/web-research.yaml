@@ -1,0 +1,6 @@
+name: web-research
+instructions: |
+  When researching a topic, prioritize primary sources and recent
+  publications over aggregator content. Always capture the source URL
+  alongside every claim you extract - a claim without a URL cannot be
+  verified later and must not appear in your output.

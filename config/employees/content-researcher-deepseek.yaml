@@ -19,10 +19,9 @@ skills:
   - source-verification
 
 tools:
-  - type: mcp
-    name: duckduckgo
-    command: npx
-    args: ["-y", "duckduckgo-mcp-server"]
+  # See config/connectors/duckduckgo.yaml.
+  - type: connector
+    connector: duckduckgo
 
 constraints:
   max_turns: 10

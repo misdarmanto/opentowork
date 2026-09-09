@@ -3,12 +3,12 @@ import { loadMcpTools } from "./mcp.js";
 
 /**
  * Tests against the REAL third-party MCP servers used in config/employees/
- * (not our own test fixtures) — proves the actual packages we depend on are
+ * (not our own test fixtures) - proves the actual packages we depend on are
  * still reachable and speak the protocol we expect, which
  * `tools/mcp.test.ts`'s fixture server can't prove on its own.
  *
  * Deliberately does NOT assert on search results. DuckDuckGo's HTML search
- * anomaly-blocks scraping from many IPs (datacenter/CI ranges especially —
+ * anomaly-blocks scraping from many IPs (datacenter/CI ranges especially -
  * see ROADMAP.md Phase 2) and can rate-limit even on a real residential
  * connection, so asserting on result content would make this test flaky for
  * reasons that have nothing to do with our code. Connecting and listing

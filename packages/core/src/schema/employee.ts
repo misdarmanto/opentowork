@@ -1,34 +1,15 @@
 import { z } from "zod";
-
-const toolConfigSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("mcp"),
-    name: z.string(),
-    // stdio transport (most real MCP servers, e.g. `npx @modelcontextprotocol/server-brave-search`)
-    command: z.string().optional(),
-    args: z.array(z.string()).default([]),
-    // streamable-http transport, for servers exposed over HTTP instead
-    endpoint: z.string().optional(),
-    credentials_from: z.string().optional(),
-  }),
-  z.object({
-    type: z.literal("custom"),
-    name: z.string(),
-    path: z.string(),
-    timeout: z.number().optional(),
-  }),
-  z.object({
-    type: z.literal("builtin"),
-    name: z.string(),
-    context: z.string().optional(),
-  }),
-]);
+import { toolConfigSchema } from "./tool.js";
 
 export const employeeSchema = z.object({
   name: z.string(),
   role: z.string(),
   department: z.string().optional(),
   description: z.string().optional(),
+  /** Free-form persona/instructions, sent as the LLM's system prompt verbatim (in addition to role/description/success_criteria, which are always included). */
+  system_prompt: z.string().optional(),
+  /** Reference material always included in the system prompt - company style guide, product facts, etc. */
+  context: z.string().optional(),
 
   provider: z.enum(["anthropic", "openai", "google", "deepseek"]),
   model: z.string(),
@@ -62,7 +43,6 @@ export const employeeSchema = z.object({
 });
 
 export type Employee = z.infer<typeof employeeSchema>;
-export type ToolConfig = z.infer<typeof toolConfigSchema>;
 
 export function parseEmployee(raw: unknown): Employee {
   return employeeSchema.parse(raw);

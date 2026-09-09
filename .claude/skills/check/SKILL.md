@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 Run the full pre-commit check for this repo: build every package, run lint,
 then run tests. Report failures with the exact file/line, don't just say
-"tests failed". If everything passes, say so briefly — don't pad the report.
+"tests failed". If everything passes, say so briefly - don't pad the report.
 
 Steps:
 1. `pnpm build`

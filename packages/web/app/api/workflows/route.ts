@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { buildWorkflowFromForm, listWorkflows, saveWorkflow, type WorkflowFormInput } from "@/lib/server/workflows";
+import { apiLogger } from "@/lib/server/logger";
 
 export async function GET() {
   try {
     const workflows = listWorkflows();
     return NextResponse.json({ workflows });
   } catch (err) {
+    apiLogger.error("request failed", { route: "/api/workflows", err });
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
@@ -17,6 +19,7 @@ export async function POST(request: Request) {
     saveWorkflow(workflow, yamlText);
     return NextResponse.json({ workflow, yamlText }, { status: 201 });
   } catch (err) {
+    apiLogger.error("request failed", { route: "/api/workflows", err });
     return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 400 });
   }
 }

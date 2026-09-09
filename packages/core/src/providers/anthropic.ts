@@ -25,12 +25,18 @@ export class AnthropicProvider implements LLMProvider {
     this.client = new Anthropic({ apiKey: config.apiKey, timeout: config.timeout, baseURL: config.baseUrl });
   }
 
-  async call(messages: MessageParam[], modelConfig: ModelConfig, tools?: ToolSchema[]): Promise<LLMResponse> {
+  async call(
+    messages: MessageParam[],
+    modelConfig: ModelConfig,
+    tools?: ToolSchema[],
+    system?: string,
+  ): Promise<LLMResponse> {
     const response = await this.client.messages.create({
       model: modelConfig.model,
       max_tokens: modelConfig.maxTokens ?? 4096,
       temperature: modelConfig.temperature,
       top_p: modelConfig.topP,
+      system,
       tools: tools?.map((t) => ({
         name: t.name,
         description: t.description,

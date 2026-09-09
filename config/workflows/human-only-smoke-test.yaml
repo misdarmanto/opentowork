@@ -1,6 +1,6 @@
 name: human-only-smoke-test
 description: >
-  No LLM calls — used to manually smoke-test the CLI's approve/reject/resume
+  No LLM calls - used to manually smoke-test the CLI's approve/reject/resume
   plumbing (trace.jsonl, state.json, exit codes, JSON event logging) without
   an API key. Deliberately degenerate (resubmit_to points at itself, since
   there's no agent step to resubmit to): it only proves the CLI wiring, not

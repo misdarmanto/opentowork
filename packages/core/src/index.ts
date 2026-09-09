@@ -1,5 +1,10 @@
 export * from "./schema/employee.js";
 export * from "./schema/workflow.js";
+export * from "./schema/tool.js";
+export * from "./schema/connector.js";
+export * from "./schema/skill.js";
+export * from "./schema/settings.js";
+export * from "./store/settings-file.js";
 export * from "./providers/types.js";
 export * from "./providers/factory.js";
 export * from "./providers/anthropic.js";
@@ -7,3 +12,5 @@ export * from "./store/index.js";
 export * from "./executor/index.js";
 export * from "./executor/tracer.js";
 export * from "./tools/registry.js";
+export * from "./logger.js";
+export * from "./auth/password.js";

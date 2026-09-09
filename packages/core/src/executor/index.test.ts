@@ -26,7 +26,7 @@ function fakeEmployee(overrides: Partial<Employee> = {}): Employee {
 /**
  * A fake ProviderFactory that always ends the turn immediately with a fixed
  * artifact. Executor tests are about step sequencing and state transitions,
- * not real LLM behavior — that boundary is exactly what LLMProvider exists
+ * not real LLM behavior - that boundary is exactly what LLMProvider exists
  * to isolate (see CLAUDE.md's provider-agnostic seam).
  */
 function fakeProviders(artifact = "output"): ProviderFactory {
@@ -81,6 +81,58 @@ describe("WorkflowExecutor", () => {
     expect(state.status).toBe("completed");
     expect(state.stepOutputs.get("research")).toBe("research brief");
     expect(store.getRun(state.runId)?.status).toBe("completed");
+  });
+
+  it("builds and forwards a real system prompt from the employee's persona fields", async () => {
+    const workflow: Workflow = {
+      name: "single-step",
+      trigger: "manual",
+      steps: [
+        {
+          name: "research",
+          employee: "content-researcher",
+          handoff: { objective: "Research {{topic}}", constraints: [] },
+        },
+      ],
+    };
+
+    let seenSystem: string | undefined;
+    const providers = {
+      call: async (
+        _provider: string,
+        _messages: unknown,
+        _modelConfig: unknown,
+        _tools: unknown,
+        system?: string,
+      ) => {
+        seenSystem = system;
+        return {
+          id: "fake",
+          content: [{ type: "text" as const, text: "brief" }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 1, outputTokens: 1 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(
+      providers,
+      store,
+      async () =>
+        fakeEmployee({
+          department: "Content",
+          system_prompt: "Always cite your sources.",
+          success_criteria: ["cites 5 sources"],
+        }),
+      { log: () => {} },
+    );
+
+    await executor.run(workflow);
+
+    expect(seenSystem).toContain("You are content-researcher, a Researcher in the Content department.");
+    expect(seenSystem).toContain("Always cite your sources.");
+    expect(seenSystem).toContain("- cites 5 sources");
   });
 
   it("passes a prior step's output into the next step's context via depends_on", async () => {
@@ -166,7 +218,7 @@ describe("WorkflowExecutor", () => {
     // so any stop_reason other than "end_turn" is a hard failure by design.
     // This also means the max_turns loop guard is currently unreachable dead
     // code: every iteration either returns (end_turn) or throws (anything
-    // else) on its first pass — a real "exceeded max_turns" path only
+    // else) on its first pass - a real "exceeded max_turns" path only
     // becomes reachable once tool_use has a branch that loops instead of
     // throwing. That gap is intentional scope, not something this test
     // should hide by asserting around it.
@@ -260,6 +312,120 @@ describe("WorkflowExecutor", () => {
     const state = await executor.run(workflow);
 
     expect(call).toBe(2); // proves the loop actually went through a tool round trip, not just one call
+    expect(state.status).toBe("completed");
+    expect(state.stepOutputs.get("research")).toBe("done");
+  });
+
+  it("resolves a {type: connector} tool reference end-to-end via the executor's loadConnector param", async () => {
+    const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "tools", "__fixtures__");
+
+    const workflow: Workflow = {
+      name: "with-connector",
+      trigger: "manual",
+      steps: [
+        {
+          name: "research",
+          employee: "content-researcher",
+          handoff: { objective: "Echo something", constraints: [] },
+        },
+      ],
+    };
+
+    let call = 0;
+    let connectorLookups = 0;
+    const toolCallingProvider = {
+      call: async () => {
+        call++;
+        if (call === 1) {
+          return {
+            id: "fake-1",
+            content: [{ type: "tool_use" as const, id: "tool-1", name: "echo", input: { text: "hi" } }],
+            stopReason: "tool_use" as const,
+            usage: { inputTokens: 5, outputTokens: 5 },
+          };
+        }
+        return {
+          id: "fake-2",
+          content: [{ type: "text" as const, text: "done via connector" }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 5, outputTokens: 5 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(
+      toolCallingProvider,
+      store,
+      async () => fakeEmployee({ tools: [{ type: "connector", connector: "shared-echo" }] }),
+      { log: () => {} },
+      fixturesDir,
+      async (name) => {
+        connectorLookups++;
+        expect(name).toBe("shared-echo");
+        return { type: "custom", name: "echo", path: "echo-custom-tool.mjs" };
+      },
+    );
+
+    const state = await executor.run(workflow);
+
+    expect(connectorLookups).toBe(1);
+    expect(state.status).toBe("completed");
+    expect(state.stepOutputs.get("research")).toBe("done via connector");
+  });
+
+  it("resolves employee.skills via loadSkill, appending instructions to the system prompt and merging skill tools", async () => {
+    const fixturesDir = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "tools", "__fixtures__");
+
+    const workflow: Workflow = {
+      name: "with-skill",
+      trigger: "manual",
+      steps: [
+        {
+          name: "research",
+          employee: "content-researcher",
+          handoff: { objective: "Echo something", constraints: [] },
+        },
+      ],
+    };
+
+    let capturedSystem: string | undefined;
+    let skillLookups = 0;
+    const provider = {
+      call: async (_provider: unknown, _messages: unknown, _model: unknown, _tools: unknown, system?: string) => {
+        capturedSystem = system;
+        return {
+          id: "fake",
+          content: [{ type: "text" as const, text: "done" }],
+          stopReason: "end_turn" as const,
+          usage: { inputTokens: 5, outputTokens: 5 },
+        };
+      },
+      calculateCost: () => 0,
+    } as unknown as ProviderFactory;
+
+    const executor = new WorkflowExecutor(
+      provider,
+      store,
+      async () => fakeEmployee({ skills: ["web-research"] }),
+      { log: () => {} },
+      fixturesDir,
+      undefined,
+      async (name) => {
+        skillLookups++;
+        expect(name).toBe("web-research");
+        return {
+          name: "web-research",
+          instructions: "Prefer primary sources and always include a URL per claim.",
+          tools: [{ type: "custom", name: "echo", path: "echo-custom-tool.mjs" }],
+        };
+      },
+    );
+
+    const state = await executor.run(workflow);
+
+    expect(skillLookups).toBe(1);
+    expect(capturedSystem).toContain("Prefer primary sources and always include a URL per claim.");
     expect(state.status).toBe("completed");
     expect(state.stepOutputs.get("research")).toBe("done");
   });
@@ -373,7 +539,7 @@ describe("WorkflowExecutor.approve / reject / resume", () => {
         scriptCalls++;
         if (scriptCalls === 2) {
           // Simulates the process dying partway through the resubmitted
-          // step's execution — after reject() has already committed the
+          // step's execution - after reject() has already committed the
           // decision and the supersede, before write-script's re-run ever
           // records a new "completed" row.
           throw new Error("simulated crash mid-retry");

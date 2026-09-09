@@ -101,7 +101,7 @@ export default function DashboardPage() {
             </div>
           ) : runs.length === 0 ? (
             <p className="py-6 text-sm text-muted-foreground">
-              No runs yet — trigger one from{" "}
+              No runs yet - trigger one from{" "}
               <Link href="/workflows" className="underline underline-offset-2">
                 Workflows
               </Link>

@@ -8,29 +8,64 @@ import {
   combineTracers,
   createFileTracer,
   isHumanStep,
+  parseConnector,
   parseEmployee,
+  parseSkill,
+  readSettingsFile,
   writeArtifacts,
   writeStateSnapshot,
+  type Connector,
   type Employee,
   type ExecutionState,
+  type Skill,
   type Workflow,
 } from "@open-work/core";
-import { CONFIG_DIR, PROJECT_ROOT, RUNS_DIR } from "./paths";
+import { CONFIG_DIR, PROJECT_ROOT, RUNS_DIR, STATE_DIR } from "./paths";
 import { getStore } from "./store";
 
+// Employee/connector/skill names become filenames on disk - same path-traversal
+// concern assertSafeFileName in ./workflows.ts guards against for workflow names.
+const SAFE_NAME = /^[a-z0-9][a-z0-9_-]*$/i;
+
+function assertSafeFileName(name: string): void {
+  if (!SAFE_NAME.test(name)) {
+    throw new Error(`Invalid name "${name}" - use only letters, numbers, hyphens, and underscores`);
+  }
+}
+
 async function loadEmployee(name: string): Promise<Employee> {
+  assertSafeFileName(name);
   const filePath = path.join(CONFIG_DIR, "employees", `${name}.yaml`);
   return parseEmployee(parseYAML(fs.readFileSync(filePath, "utf-8")));
 }
 
+async function loadConnector(name: string): Promise<Connector> {
+  assertSafeFileName(name);
+  const filePath = path.join(CONFIG_DIR, "connectors", `${name}.yaml`);
+  return parseConnector(parseYAML(fs.readFileSync(filePath, "utf-8")));
+}
+
+async function loadSkill(name: string): Promise<Skill> {
+  assertSafeFileName(name);
+  const filePath = path.join(CONFIG_DIR, "skills", `${name}.yaml`);
+  return parseSkill(parseYAML(fs.readFileSync(filePath, "utf-8")));
+}
+
 function buildProviderFactory(): ProviderFactory {
   const factory = new ProviderFactory();
-  if (process.env.ANTHROPIC_API_KEY) {
-    factory.register("anthropic", new AnthropicProvider(), { apiKey: process.env.ANTHROPIC_API_KEY });
+  // A key set through the Settings page (.open-work/settings.json) overrides
+  // the equivalent env var - see packages/cli/src/index.ts's identical logic.
+  const settings = readSettingsFile(STATE_DIR);
+
+  const anthropicKey = settings.apiKeys.anthropic ?? process.env.ANTHROPIC_API_KEY;
+  if (anthropicKey) {
+    factory.register("anthropic", new AnthropicProvider(), { apiKey: anthropicKey });
   }
-  if (process.env.DEEPSEEK_API_KEY) {
+
+  const deepseekKey = settings.apiKeys.deepseek ?? process.env.DEEPSEEK_API_KEY;
+  if (deepseekKey) {
     factory.register("deepseek", new AnthropicProvider(), {
-      apiKey: process.env.DEEPSEEK_API_KEY,
+      apiKey: deepseekKey,
       baseUrl: "https://api.deepseek.com/anthropic",
     });
   }
@@ -43,7 +78,7 @@ function buildExecutor(runId: string): WorkflowExecutor {
     { log: (e) => console.log(JSON.stringify(e)) },
     createFileTracer(RUNS_DIR, runId),
   );
-  return new WorkflowExecutor(providers, getStore(), loadEmployee, tracer, PROJECT_ROOT);
+  return new WorkflowExecutor(providers, getStore(), loadEmployee, tracer, PROJECT_ROOT, loadConnector, loadSkill);
 }
 
 function deliverablesOf(workflow: Workflow): Map<string, string> {
@@ -61,7 +96,7 @@ function persistArtifacts(workflow: Workflow, state: ExecutionState): void {
 
 /**
  * These mirror packages/cli/src/index.ts's run/resume/approve/reject
- * commands exactly — same executor, same store, same file layout. The web
+ * commands exactly - same executor, same store, same file layout. The web
  * app is a second *interface*, never a second implementation of what a run
  * does (see CLAUDE.md's dual-interface decision).
  */

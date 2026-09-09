@@ -1,4 +1,4 @@
-import type { Employee, ExecutionState, Workflow } from "@open-work/core";
+import type { Connector, Employee, ExecutionState, Provider, Skill, Workflow } from "@open-work/core";
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -44,6 +44,18 @@ export interface ApprovalRow {
   decidedBy: string | null;
 }
 
+export interface ProviderStatus {
+  provider: Provider;
+  configured: boolean;
+  source: "settings" | "env" | "none";
+  last4?: string;
+}
+
+export interface SettingsView {
+  providers: ProviderStatus[];
+  customModels: { provider: Provider; name: string }[];
+}
+
 export const api = {
   listWorkflows: () => request<{ workflows: Workflow[] }>("/api/workflows"),
   listEmployees: () => request<{ employees: Employee[] }>("/api/employees"),
@@ -63,5 +75,49 @@ export const api = {
     request<{ workflow: Workflow; yamlText: string }>("/api/workflows", {
       method: "POST",
       body: JSON.stringify(input),
+    }),
+  listConnectors: () => request<{ connectors: Connector[] }>("/api/connectors"),
+  createConnector: (input: unknown) =>
+    request<{ connector: Connector; yamlText: string }>("/api/connectors", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  listSkills: () => request<{ skills: Skill[] }>("/api/skills"),
+  createSkill: (input: unknown) =>
+    request<{ skill: Skill; yamlText: string }>("/api/skills", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  updateSkill: (name: string, input: unknown) =>
+    request<{ skill: Skill; yamlText: string }>(`/api/skills/${encodeURIComponent(name)}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }),
+  createEmployee: (input: unknown) =>
+    request<{ employee: Employee; yamlText: string }>("/api/employees", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  updateEmployee: (name: string, input: unknown) =>
+    request<{ employee: Employee; yamlText: string }>(`/api/employees/${encodeURIComponent(name)}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }),
+  deleteEmployee: (name: string) =>
+    request<{ ok: true }>(`/api/employees/${encodeURIComponent(name)}`, { method: "DELETE" }),
+  getSettings: () => request<SettingsView>("/api/settings"),
+  setApiKey: (provider: Provider, apiKey: string) =>
+    request<SettingsView>("/api/settings", { method: "POST", body: JSON.stringify({ action: "setApiKey", provider, apiKey }) }),
+  clearApiKey: (provider: Provider) =>
+    request<SettingsView>("/api/settings", { method: "POST", body: JSON.stringify({ action: "clearApiKey", provider }) }),
+  addCustomModel: (provider: Provider, name: string) =>
+    request<SettingsView>("/api/settings", {
+      method: "POST",
+      body: JSON.stringify({ action: "addCustomModel", provider, name }),
+    }),
+  removeCustomModel: (provider: Provider, name: string) =>
+    request<SettingsView>("/api/settings", {
+      method: "POST",
+      body: JSON.stringify({ action: "removeCustomModel", provider, name }),
     }),
 };

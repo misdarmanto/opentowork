@@ -4,7 +4,11 @@ import { isHumanStep, type Workflow, type WorkflowStep } from "../schema/workflo
 import type { ProviderFactory } from "../providers/factory.js";
 import type { ContentBlock, MessageParam } from "../providers/types.js";
 import type { RunStore } from "../store/index.js";
-import { closeTools, loadToolsForEmployee } from "../tools/registry.js";
+import { closeTools, loadSkillsForEmployee, loadToolsForEmployee, type ConnectorLoader, type SkillLoader } from "../tools/registry.js";
+import { buildSystemPrompt } from "./system-prompt.js";
+import { createLogger } from "../logger.js";
+
+const logger = createLogger("executor");
 
 export interface Tracer {
   log(entry: Record<string, unknown>): void;
@@ -32,11 +36,15 @@ export class WorkflowExecutor {
     private readonly tracer: Tracer,
     /** Base directory custom tool `path` entries resolve against (usually the project root, where `config/` lives). */
     private readonly projectRoot: string = process.cwd(),
+    /** Resolves a `{type: connector, connector: <name>}` tool reference. Optional - omitting it is fine as long as no employee actually uses one. */
+    private readonly loadConnector?: ConnectorLoader,
+    /** Resolves a name in an employee's `skills:` list. Optional - omitting it is fine as long as no employee actually lists one. */
+    private readonly loadSkill?: SkillLoader,
   ) {}
 
   /**
    * `runId` can be supplied by the caller (e.g. so a CLI can create a
-   * run-scoped file tracer before any step executes) — it otherwise
+   * run-scoped file tracer before any step executes) - it otherwise
    * generates one itself.
    */
   async run(workflow: Workflow, params: Record<string, string> = {}, runId: string = randomUUID()): Promise<ExecutionState> {
@@ -56,8 +64,8 @@ export class WorkflowExecutor {
   /**
    * Continues a run that's still "running" in the DB (process died
    * mid-step) or "awaiting_approval" with no decision made yet. Rebuilds
-   * state entirely from RunStore — SQLite is the durable checkpoint, not
-   * any in-memory object — and resumes at the first step that isn't done.
+   * state entirely from RunStore - SQLite is the durable checkpoint, not
+   * any in-memory object - and resumes at the first step that isn't done.
    */
   async resume(runId: string, workflow: Workflow): Promise<ExecutionState> {
     const state = this.rehydrate(runId, workflow);
@@ -66,7 +74,7 @@ export class WorkflowExecutor {
     // rehydrate() reports the DB's pre-decision status (checked above); once
     // we've decided there's actually work to (re-)drive forward, the state
     // machine's own "running" is what governs executeFrom/executeStep from
-    // here — leaving the stale "awaiting_approval" in place would make
+    // here - leaving the stale "awaiting_approval" in place would make
     // executeFrom think a still-pending human step it hasn't even reached
     // yet is the one it just paused on, and return immediately.
     state.status = "running";
@@ -135,7 +143,7 @@ export class WorkflowExecutor {
     return state;
   }
 
-  /** Rebuilds an ExecutionState purely from what's durably stored — never from memory. */
+  /** Rebuilds an ExecutionState purely from what's durably stored - never from memory. */
   private rehydrate(runId: string, workflow: Workflow): ExecutionState {
     const run = this.store.getRun(runId);
     if (!run) throw new Error(`No run found with id "${runId}"`);
@@ -178,6 +186,7 @@ export class WorkflowExecutor {
       this.store.updateRunStatus(state.runId, "completed", { completedAt: new Date() });
     } catch (err) {
       state.status = "failed";
+      logger.error("run failed", { runId: state.runId, workflow: state.workflow.name, err });
       this.store.updateRunStatus(state.runId, "failed", {
         errorMessage: err instanceof Error ? err.message : String(err),
       });
@@ -239,9 +248,14 @@ export class WorkflowExecutor {
     runId: string,
     stepName: string,
   ): Promise<{ artifact: string; inputTokens: number; outputTokens: number; cost: number }> {
-    const tools = await loadToolsForEmployee(employee, this.projectRoot);
+    const skills = await loadSkillsForEmployee(employee, this.loadSkill);
+    const tools = await loadToolsForEmployee(employee, this.projectRoot, this.loadConnector, skills);
     const toolByName = new Map(tools.map((t) => [t.name, t]));
     const toolSchemas = tools.map((t) => ({ name: t.name, description: t.description, inputSchema: t.inputSchema }));
+    const system = buildSystemPrompt(
+      employee,
+      skills.map((s) => s.instructions),
+    );
 
     try {
       const messages: MessageParam[] = [{ role: "user", content: objective }];
@@ -259,6 +273,7 @@ export class WorkflowExecutor {
             maxTokens: employee.model_config?.max_tokens,
           },
           toolSchemas.length ? toolSchemas : undefined,
+          system,
         );
 
         totalInput += response.usage.inputTokens;
@@ -303,6 +318,7 @@ export class WorkflowExecutor {
               const result = await tool.execute(toolUse.input);
               toolResults.push({ type: "tool_result", tool_use_id: toolUse.id, content: result });
             } catch (err) {
+              logger.error("tool execution failed", { runId, step: stepName, tool: toolUse.name, err });
               toolResults.push({
                 type: "tool_result",
                 tool_use_id: toolUse.id,
@@ -318,11 +334,13 @@ export class WorkflowExecutor {
         }
 
         // Any other stop reason (e.g. max_tokens) is a hard failure rather
-        // than a silent partial result — see CLAUDE.md's "don't claim
+        // than a silent partial result - see CLAUDE.md's "don't claim
         // something works" rule applied to the agent's own output.
+        logger.error("unhandled stop reason", { runId, step: stepName, employee: employee.name, stopReason: response.stopReason });
         throw new Error(`Unhandled stop reason "${response.stopReason}" for employee "${employee.name}"`);
       }
 
+      logger.error("employee exceeded max_turns", { runId, step: stepName, employee: employee.name, maxTurns: employee.constraints.max_turns });
       throw new Error(`Employee "${employee.name}" exceeded max_turns (${employee.constraints.max_turns})`);
     } finally {
       await closeTools(tools);

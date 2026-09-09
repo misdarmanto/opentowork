@@ -1,4 +1,7 @@
 import type { LLMProvider, LLMResponse, MessageParam, ModelConfig, ProviderConfig, ToolSchema } from "./types.js";
+import { createLogger } from "../logger.js";
+
+const logger = createLogger("provider:factory");
 
 export class ProviderFactory {
   private providers = new Map<string, LLMProvider>();
@@ -15,8 +18,13 @@ export class ProviderFactory {
     if (!provider) throw new Error(`Provider "${name}" not registered`);
 
     if (!this.initialized.has(name)) {
-      await provider.initialize(this.configs.get(name)!);
-      this.initialized.add(name);
+      try {
+        await provider.initialize(this.configs.get(name)!);
+        this.initialized.add(name);
+      } catch (err) {
+        logger.error("provider initialization failed", { provider: name, err });
+        throw err;
+      }
     }
     return provider;
   }
@@ -26,9 +34,15 @@ export class ProviderFactory {
     messages: MessageParam[],
     modelConfig: ModelConfig,
     tools?: ToolSchema[],
+    system?: string,
   ): Promise<LLMResponse> {
     const provider = await this.get(providerName);
-    return provider.call(messages, modelConfig, tools);
+    try {
+      return await provider.call(messages, modelConfig, tools, system);
+    } catch (err) {
+      logger.error("provider call failed", { provider: providerName, model: modelConfig.model, err });
+      throw err;
+    }
   }
 
   calculateCost(providerName: string, inputTokens: number, outputTokens: number, model: string): number {

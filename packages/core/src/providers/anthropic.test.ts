@@ -21,7 +21,7 @@ describe("AnthropicProvider.initialize", () => {
 });
 
 /**
- * Mocks the SDK client's messages.create — these tests are about
+ * Mocks the SDK client's messages.create - these tests are about
  * AnthropicProvider's own translation logic (stop-reason mapping, usage
  * pass-through), not about whether the Anthropic API itself works.
  */
@@ -84,6 +84,25 @@ describe("AnthropicProvider.call", () => {
         tools: [{ name: "echo", description: "echoes", input_schema: { type: "object" } }],
       }),
     );
+  });
+
+  it("forwards the system prompt to the SDK call", async () => {
+    const { provider, create } = await providerWithMockedCreate({ ...baseResponse, stop_reason: "end_turn" });
+    await provider.call(
+      [{ role: "user", content: "hi" }],
+      { model: "claude-sonnet-4" },
+      undefined,
+      "You are a helpful researcher.",
+    );
+
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ system: "You are a helpful researcher." }));
+  });
+
+  it("omits the system field (undefined) when no employee system prompt is built", async () => {
+    const { provider, create } = await providerWithMockedCreate({ ...baseResponse, stop_reason: "end_turn" });
+    await provider.call([{ role: "user", content: "hi" }], { model: "claude-sonnet-4" });
+
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ system: undefined }));
   });
 });
 

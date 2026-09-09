@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // PreToolUse hook (Edit|Write): block hand-edits to generated/runtime paths.
 // Per CLAUDE.md "Working conventions": packages/*/dist/ and .open-work/ are
-// not hand-edited — dist/ is tsc output, .open-work/ is runtime DB + traces.
+// not hand-edited - dist/ is tsc output, .open-work/ is runtime DB + traces.
 // This is a hard guardrail (hook), not just a CLAUDE.md instruction, because
 // it must hold with zero exceptions regardless of context-window pressure.
 

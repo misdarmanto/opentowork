@@ -76,7 +76,7 @@ describe("RunStore", () => {
   });
 
   it("tracks an approval from pending to rejected", () => {
-    // The rejected path is what Phase 1's resubmit-to-step gate depends on —
+    // The rejected path is what Phase 1's resubmit-to-step gate depends on -
     // worth its own case, not just lumped in with "approved".
     store.createRun({ id: "run-1", workflowName: "research-and-script" });
     store.createApproval({ id: "approval-1", runId: "run-1", stepName: "review" });
@@ -112,11 +112,47 @@ describe("RunStore", () => {
     store.recordStep({ id: "step-1", runId: "run-1", stepName: "write-script", status: "completed", output: "draft 1" });
     store.supersedeCompletedSteps("run-1", "write-script");
     // Recorded immediately after, almost certainly within the same second
-    // as step-1 — this is exactly the resubmit-retry scenario.
+    // as step-1 - this is exactly the resubmit-retry scenario.
     store.recordStep({ id: "step-2", runId: "run-1", stepName: "write-script", status: "completed", output: "draft 2" });
 
     const latest = store.getLatestStepsByName("run-1").get("write-script");
     expect(latest?.output).toBe("draft 2");
     expect(latest?.status).toBe("completed");
+  });
+
+  it("upsertUser creates a new user, findable by email or id", () => {
+    store.upsertUser({ id: "user-1", email: "owner@example.com", passwordHash: "salt:hash" });
+
+    expect(store.findUserByEmail("owner@example.com")?.id).toBe("user-1");
+    expect(store.findUserById("user-1")?.email).toBe("owner@example.com");
+  });
+
+  it("upsertUser updates the password hash of an existing email instead of creating a duplicate", () => {
+    store.upsertUser({ id: "user-1", email: "owner@example.com", passwordHash: "salt:old-hash" });
+    store.upsertUser({ id: "user-2", email: "owner@example.com", passwordHash: "salt:new-hash" });
+
+    const user = store.findUserByEmail("owner@example.com");
+    expect(user?.id).toBe("user-1"); // the original row, not a duplicate under user-2
+    expect(user?.passwordHash).toBe("salt:new-hash");
+  });
+
+  it("findUserByEmail/findUserById return undefined for a user that doesn't exist", () => {
+    expect(store.findUserByEmail("nobody@example.com")).toBeUndefined();
+    expect(store.findUserById("no-such-id")).toBeUndefined();
+  });
+
+  it("creates a session and finds it by its token, then deleteSession genuinely removes it", () => {
+    store.upsertUser({ id: "user-1", email: "owner@example.com", passwordHash: "salt:hash" });
+    const expiresAt = new Date(Date.now() + 60_000);
+    store.createSession({ id: "token-1", userId: "user-1", expiresAt });
+
+    const session = store.findSession("token-1");
+    expect(session?.userId).toBe("user-1");
+    // expiresAt is second-resolution (drizzle "timestamp" mode, same as
+    // runs.startedAt/approvals.requestedAt), so compare to the nearest second.
+    expect(session?.expiresAt.getTime()).toBe(Math.floor(expiresAt.getTime() / 1000) * 1000);
+
+    store.deleteSession("token-1");
+    expect(store.findSession("token-1")).toBeUndefined();
   });
 });
