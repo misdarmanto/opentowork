@@ -101,6 +101,10 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(input),
     }),
+  deleteSkill: (name: string) =>
+    request<{ ok: true }>(`/api/skills/${encodeURIComponent(name)}`, { method: "DELETE" }),
+  deleteConnector: (name: string) =>
+    request<{ ok: true }>(`/api/connectors/${encodeURIComponent(name)}`, { method: "DELETE" }),
   createEmployee: (input: unknown) =>
     request<{ employee: Employee; yamlText: string }>("/api/employees", {
       method: "POST",
