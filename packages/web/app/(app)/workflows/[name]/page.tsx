@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Play } from "lucide-react";
+import { ArrowLeft, Download, FileText, Play } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Workflow } from "@open-work/core";
@@ -17,9 +17,6 @@ import type { Workflow } from "@open-work/core";
 type Step = Workflow["steps"][number];
 type HumanStep = Extract<Step, { assignee: "human" }>;
 
-// Duplicated from @open-work/core's isHumanStep rather than imported - see
-// the identical note in ../page.tsx for why (client bundle can't pull in
-// the executor/store/tools modules that live behind the barrel export).
 function isHumanStep(step: Step): step is HumanStep {
   return "assignee" in step && step.assignee === "human";
 }
@@ -37,6 +34,11 @@ export default function WorkflowDetailPage() {
     retry: false,
   });
 
+  const runsQuery = useQuery({
+    queryKey: ["runs"],
+    queryFn: () => api.listRuns(),
+  });
+
   const triggerMutation = useMutation({
     mutationFn: () => api.triggerRun(name, topic ? { topic } : {}),
     onSuccess: (data) => {
@@ -44,6 +46,15 @@ export default function WorkflowDetailPage() {
       router.push(`/runs/${data.state.runId}`);
     },
   });
+
+  const workflowRuns = runsQuery.data?.runs.filter((r) => r.workflowName === name) || [];
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -134,8 +145,78 @@ export default function WorkflowDetailPage() {
               </ol>
             </CardContent>
           </Card>
+
+          {workflowRuns.length > 0 && (
+            <div>
+              <h2 className="mb-4 text-lg font-semibold">Run History</h2>
+              <div className="flex flex-col gap-4">
+                {workflowRuns.map((run) => (
+                  <RunCard key={run.id} runId={run.id} run={run} formatBytes={formatBytes} />
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>
+  );
+}
+
+function RunCard({ runId, run, formatBytes }: { runId: string; run: any; formatBytes: (bytes: number) => string }) {
+  const artifactsQuery = useQuery({
+    queryKey: ["artifacts", runId],
+    queryFn: () => api.listArtifacts(runId),
+  });
+
+  return (
+    <Card className="border-slate-200">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <Link href={`/runs/${runId}`} className="font-semibold text-blue-600 hover:text-blue-700 underline">
+              {new Date(run.startedAt).toLocaleString()}
+            </Link>
+            <p className="text-xs text-muted-foreground mt-1">
+              <Badge variant={run.status === "completed" ? "default" : run.status === "failed" ? "destructive" : "outline"}>
+                {run.status}
+              </Badge>
+            </p>
+          </div>
+          <div className="text-right text-sm">
+            <p className="font-mono">${(run.totalCost ?? 0).toFixed(4)}</p>
+          </div>
+        </div>
+      </CardHeader>
+
+      {artifactsQuery.data?.artifacts && artifactsQuery.data.artifacts.length > 0 && (
+        <CardContent className="border-t border-slate-100 pt-4">
+          <h3 className="text-sm font-medium mb-3 text-slate-700">Artifacts</h3>
+          <div className="flex flex-col gap-2">
+            {artifactsQuery.data.artifacts.map((artifact) => (
+              <div
+                key={artifact.name}
+                className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 hover:bg-slate-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <FileText className="size-4 text-slate-400" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-900">{artifact.name}</p>
+                    <p className="text-xs text-slate-500">{formatBytes(artifact.size)}</p>
+                  </div>
+                </div>
+                <a
+                  href={`/api/runs/${runId}/artifacts/${encodeURIComponent(artifact.name)}`}
+                  download={artifact.name}
+                  className="inline-flex items-center gap-1 rounded bg-blue-600 text-white hover:bg-blue-700 px-2 py-1 text-xs font-medium transition-colors"
+                >
+                  <Download className="size-3" />
+                  Download
+                </a>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      )}
+    </Card>
   );
 }
