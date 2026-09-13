@@ -10,7 +10,6 @@ import {
   ChevronsRight,
   LayoutDashboard,
   LogOut,
-  Plus,
   Settings as SettingsIcon,
   SlidersHorizontal,
   User,
@@ -18,7 +17,6 @@ import {
   Workflow as WorkflowIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 
 const NAV_ITEMS = [
@@ -109,18 +107,6 @@ export function Sidebar({ email }: { email: string }) {
         >
           {collapsed ? <ChevronsRight className="size-4" /> : <ChevronsLeft className="size-4" />}
         </button>
-      </div>
-
-      <div className="px-3">
-        <Button
-          size="sm"
-          className={cn("w-full", collapsed && "px-0")}
-          nativeButton={false}
-          render={<Link href="/workflows?new=1" title="New workflow" />}
-        >
-          <Plus className="size-4" />
-          {!collapsed && "New workflow"}
-        </Button>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 p-3">
