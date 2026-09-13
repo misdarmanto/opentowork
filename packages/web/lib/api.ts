@@ -56,6 +56,11 @@ export interface SettingsView {
   customModels: { provider: Provider; name: string }[];
 }
 
+export interface Artifact {
+  name: string;
+  size: number;
+}
+
 export const api = {
   listWorkflows: () => request<{ workflows: Workflow[] }>("/api/workflows"),
   getWorkflow: (name: string) => request<{ workflow: Workflow }>(`/api/workflows/${encodeURIComponent(name)}`),
@@ -64,6 +69,8 @@ export const api = {
   listApprovals: () => request<{ pending: ApprovalRow[] }>("/api/approvals"),
   getRun: (id: string) =>
     request<{ run: RunRow; steps: StepRow[]; pendingApproval?: ApprovalRow }>(`/api/runs/${id}`),
+  listArtifacts: (runId: string) =>
+    request<{ artifacts: Artifact[] }>(`/api/runs/${runId}/artifacts`),
   triggerRun: (workflow: string, params: Record<string, string>) =>
     request<{ state: ExecutionState }>("/api/runs", {
       method: "POST",

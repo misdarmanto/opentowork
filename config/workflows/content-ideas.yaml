@@ -1,0 +1,33 @@
+name: content-ideas
+description: Content approval workflow - creator submits content for review, manager approves or rejects
+
+params:
+  - name: topic
+    description: Content topic or title
+    required: true
+
+steps:
+  - name: submit-for-review
+    assignee: human
+    action: approve_or_reject
+    on_reject:
+      resubmit_to: submit-for-review
+      max_attempts: 3
+
+  - name: publish-content
+    employee: content-idea-generator
+    depends_on: submit-for-review
+    handoff:
+      objective: |
+        The content about "{{ topic }}" has been approved for publishing.
+
+        Provide a brief summary of next steps including:
+        1. Publishing timeline
+        2. Distribution channels to consider
+        3. Post-publishing metrics to track
+
+      context: |
+        This is an approved piece of content ready to move into the publishing phase.
+        Provide practical next steps that a content manager would take.
+
+      deliverable: publishing-plan.txt
