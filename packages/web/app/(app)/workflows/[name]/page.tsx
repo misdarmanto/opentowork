@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
-import { ArrowLeft, Download, FileText, Play } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Download, FileText, Play } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,12 +21,15 @@ function isHumanStep(step: Step): step is HumanStep {
   return "assignee" in step && step.assignee === "human";
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export default function WorkflowDetailPage() {
   const params = useParams<{ name: string }>();
   const name = decodeURIComponent(params.name);
   const router = useRouter();
   const queryClient = useQueryClient();
   const [topic, setTopic] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const workflowQuery = useQuery({
     queryKey: ["workflow", name],
@@ -47,7 +50,16 @@ export default function WorkflowDetailPage() {
     },
   });
 
-  const workflowRuns = runsQuery.data?.runs.filter((r) => r.workflowName === name) || [];
+  // Sort runs by startedAt descending (newest first)
+  const workflowRuns = (runsQuery.data?.runs.filter((r) => r.workflowName === name) || [])
+    .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
+
+  const totalPages = Math.ceil(workflowRuns.length / ITEMS_PER_PAGE);
+  const paginatedRuns = workflowRuns.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
@@ -148,12 +160,45 @@ export default function WorkflowDetailPage() {
 
           {workflowRuns.length > 0 && (
             <div>
-              <h2 className="mb-4 text-lg font-semibold">Run History</h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Run History</h2>
+                <p className="text-sm text-muted-foreground">
+                  {workflowRuns.length} total run{workflowRuns.length !== 1 ? "s" : ""}
+                </p>
+              </div>
               <div className="flex flex-col gap-4">
-                {workflowRuns.map((run) => (
+                {paginatedRuns.map((run) => (
                   <RunCard key={run.id} runId={run.id} run={run} formatBytes={formatBytes} />
                 ))}
               </div>
+
+              {totalPages > 1 && (
+                <div className="mt-6 flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Page {currentPage} of {totalPages}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                    >
+                      <ChevronLeft className="size-4" />
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                    >
+                      Next
+                      <ChevronRight className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>
