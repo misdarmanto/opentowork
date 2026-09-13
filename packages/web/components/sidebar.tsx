@@ -97,7 +97,7 @@ export function Sidebar({ email }: { email: string }) {
           <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-primary-foreground">
             OW
           </span>
-          {!collapsed && <span className="truncate">Open Work</span>}
+          {!collapsed && <span className="truncate">Open to Work</span>}
         </Link>
         <button
           type="button"
@@ -181,7 +181,7 @@ export function Sidebar({ email }: { email: string }) {
       </nav>
 
       <div className="border-t border-border px-4 py-3 text-xs text-muted-foreground">
-        {collapsed ? "OW" : "Open Work - self-hosted, AGPL-3.0"}
+        {collapsed ? "OW" : "Open to Work - self-hosted, AGPL-3.0"}
       </div>
 
       <div

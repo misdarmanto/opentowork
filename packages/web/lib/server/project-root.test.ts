@@ -31,6 +31,6 @@ describe("findProjectRoot", () => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "open-work-no-root-"));
     // A tmp dir has no pnpm-workspace.yaml anywhere above it (assuming the
     // OS temp directory itself isn't inside a pnpm workspace, which it never is).
-    expect(() => findProjectRoot(tmpDir)).toThrow(/Could not find the Open Work project root/);
+    expect(() => findProjectRoot(tmpDir)).toThrow(/Could not find the Open to Work project root/);
   });
 });
