@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { AlertTriangle, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Download, FileText, RotateCcw, XCircle } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -28,6 +28,11 @@ export default function RunDetailPage() {
     queryKey: ["run", runId],
     queryFn: () => api.getRun(runId),
     refetchInterval: (query) => (TERMINAL_STATUSES.has(query.state.data?.run.status ?? "") ? false : 3000),
+  });
+
+  const artifactsQuery = useQuery({
+    queryKey: ["artifacts", runId],
+    queryFn: () => api.listArtifacts(runId),
   });
 
   const invalidate = () => {
@@ -61,6 +66,15 @@ export default function RunDetailPage() {
   const { run, steps, pendingApproval } = runQuery.data!;
   const busy = approveMutation.isPending || rejectMutation.isPending || resumeMutation.isPending;
   const mutationError = approveMutation.error ?? rejectMutation.error ?? resumeMutation.error;
+  const artifacts = artifactsQuery.data?.artifacts ?? [];
+
+  const formatBytes = (bytes: number) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -111,6 +125,35 @@ export default function RunDetailPage() {
           <RotateCcw className="size-3.5" />
           Resume (looks stalled - click if the process restarted mid-run)
         </Button>
+      )}
+
+      {artifacts.length > 0 && (
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">Artifacts</h2>
+          <div className="grid gap-2">
+            {artifacts.map((artifact) => (
+              <Card key={artifact.name} className="transition-all hover:border-slate-300 hover:shadow-sm">
+                <CardContent className="flex items-center justify-between py-3 px-4">
+                  <div className="flex items-center gap-3">
+                    <FileText className="size-5 text-slate-400" />
+                    <div>
+                      <p className="font-medium text-slate-900 text-sm">{artifact.name}</p>
+                      <p className="text-xs text-slate-500">{formatBytes(artifact.size)}</p>
+                    </div>
+                  </div>
+                  <a
+                    href={`/api/runs/${runId}/artifacts/${encodeURIComponent(artifact.name)}`}
+                    download={artifact.name}
+                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 px-3 py-2 text-xs font-medium transition-colors"
+                  >
+                    <Download className="size-3.5" />
+                    Download
+                  </a>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
       )}
 
       <div>

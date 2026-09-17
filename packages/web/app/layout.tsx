@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Open Work",
+  title: "Open to Work",
   description: "Build and run teams of AI agents.",
 };
 

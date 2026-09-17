@@ -1,6 +1,6 @@
 # @open-work/web
 
-Minimal web UI for Open Work: a form-based workflow builder, a run
+Minimal web UI for Open to Work: a form-based workflow builder, a run
 dashboard, and an approval queue - the non-CLI interface described in
 `CLAUDE.md`'s dual-interface decision. It reads and writes the exact same
 `config/*.yaml` files and the same `.open-work/db.sqlite` store that the CLI

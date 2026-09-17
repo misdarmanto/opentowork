@@ -135,21 +135,21 @@ export default function WorkflowsPage() {
           {workflowsQuery.data?.workflows.map((wf) => {
             const isExpanded = expanded === wf.name;
             return (
-              <Card key={wf.name}>
+              <Card key={wf.name} className="transition-all duration-200 border-slate-200 hover:border-slate-300 hover:shadow-md">
                 <CardHeader className="gap-4">
                   <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <h2 className="font-medium">{wf.name}</h2>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-lg font-semibold text-slate-900">{wf.name}</h2>
                       {wf.description && (
-                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{wf.description}</p>
+                        <p className="mt-1 text-sm text-slate-600 line-clamp-2">{wf.description}</p>
                       )}
                       <button
                         type="button"
-                        className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                        className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
                         onClick={() => setExpanded(isExpanded ? null : wf.name)}
                       >
-                        {isExpanded ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
-                        {wf.steps.length} step{wf.steps.length === 1 ? "" : "s"}
+                        {isExpanded ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                        <span>{wf.steps.length} step{wf.steps.length === 1 ? "" : "s"}</span>
                       </button>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-2">
@@ -163,6 +163,7 @@ export default function WorkflowsPage() {
                         size="sm"
                         disabled={triggerMutation.isPending}
                         onClick={() => triggerMutation.mutate({ name: wf.name, topic: paramsByWorkflow[wf.name] ?? "" })}
+                        className="bg-blue-600 hover:bg-blue-700"
                       >
                         <Play className="size-3.5" />
                         {triggerMutation.isPending ? "Starting…" : "Run"}
@@ -172,22 +173,22 @@ export default function WorkflowsPage() {
                 </CardHeader>
 
                 {isExpanded && (
-                  <CardContent className="border-t border-border pt-4">
+                  <CardContent className="border-t border-slate-100 pt-4">
                     <ol className="flex flex-col gap-2 text-sm">
                       {wf.steps.map((step, i) => (
-                        <li key={step.name} className="flex items-start gap-2">
-                          <Badge variant="secondary" className="mt-0.5 shrink-0">
+                        <li key={step.name} className="flex items-start gap-3">
+                          <Badge variant="secondary" className="mt-0.5 shrink-0 bg-slate-200 text-slate-800">
                             {i + 1}
                           </Badge>
                           {isHumanStep(step) ? (
                             <span>
-                              <span className="font-medium">{step.name}</span>{" "}
-                              <span className="text-muted-foreground">- human approval</span>
+                              <span className="font-semibold text-slate-900">{step.name}</span>{" "}
+                              <span className="text-slate-600">- human approval</span>
                             </span>
                           ) : (
                             <span>
-                              <span className="font-medium">{step.name}</span>{" "}
-                              <span className="text-muted-foreground">
+                              <span className="font-semibold text-slate-900">{step.name}</span>{" "}
+                              <span className="text-slate-600">
                                 - {step.employee}: {step.handoff.objective}
                               </span>
                             </span>

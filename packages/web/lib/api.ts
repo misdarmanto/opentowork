@@ -56,13 +56,21 @@ export interface SettingsView {
   customModels: { provider: Provider; name: string }[];
 }
 
+export interface Artifact {
+  name: string;
+  size: number;
+}
+
 export const api = {
   listWorkflows: () => request<{ workflows: Workflow[] }>("/api/workflows"),
+  getWorkflow: (name: string) => request<{ workflow: Workflow }>(`/api/workflows/${encodeURIComponent(name)}`),
   listEmployees: () => request<{ employees: Employee[] }>("/api/employees"),
   listRuns: () => request<{ runs: RunRow[] }>("/api/runs"),
   listApprovals: () => request<{ pending: ApprovalRow[] }>("/api/approvals"),
   getRun: (id: string) =>
     request<{ run: RunRow; steps: StepRow[]; pendingApproval?: ApprovalRow }>(`/api/runs/${id}`),
+  listArtifacts: (runId: string) =>
+    request<{ artifacts: Artifact[] }>(`/api/runs/${runId}/artifacts`),
   triggerRun: (workflow: string, params: Record<string, string>) =>
     request<{ state: ExecutionState }>("/api/runs", {
       method: "POST",
@@ -93,6 +101,10 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(input),
     }),
+  deleteSkill: (name: string) =>
+    request<{ ok: true }>(`/api/skills/${encodeURIComponent(name)}`, { method: "DELETE" }),
+  deleteConnector: (name: string) =>
+    request<{ ok: true }>(`/api/connectors/${encodeURIComponent(name)}`, { method: "DELETE" }),
   createEmployee: (input: unknown) =>
     request<{ employee: Employee; yamlText: string }>("/api/employees", {
       method: "POST",
@@ -119,5 +131,10 @@ export const api = {
     request<SettingsView>("/api/settings", {
       method: "POST",
       body: JSON.stringify({ action: "removeCustomModel", provider, name }),
+    }),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ ok: true }>("/api/auth/password", {
+      method: "PUT",
+      body: JSON.stringify({ currentPassword, newPassword }),
     }),
 };

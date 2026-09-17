@@ -74,7 +74,7 @@ export default function LoginPage() {
           <span className="flex size-8 items-center justify-center rounded-md bg-primary text-sm font-bold text-primary-foreground">
             OW
           </span>
-          <h1 className="text-lg font-semibold tracking-tight">Sign in to Open Work</h1>
+          <h1 className="text-lg font-semibold tracking-tight">Sign in to Open to Work</h1>
         </CardHeader>
         <CardContent>
           <form

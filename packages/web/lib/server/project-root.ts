@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 /**
- * Finds the Open Work project root (where config/ and .open-work/ live) by
+ * Finds the Open to Work project root (where config/ and .open-work/ live) by
  * walking up from process.cwd() looking for pnpm-workspace.yaml - the same
  * marker file that makes this a pnpm workspace at all.
  *
@@ -24,7 +24,7 @@ export function findProjectRoot(startDir: string = process.cwd()): string {
   }
 
   throw new Error(
-    `Could not find the Open Work project root (looked for pnpm-workspace.yaml above "${startDir}"). ` +
-      "Run the web app from within the Open Work repo.",
+    `Could not find the Open to Work project root (looked for pnpm-workspace.yaml above "${startDir}"). ` +
+      "Run the web app from within the Open to Work repo.",
   );
 }
